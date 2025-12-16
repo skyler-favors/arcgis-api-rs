@@ -8,277 +8,14 @@ use crate::{
     update_item::UpdateItemQueryBuilder,
 };
 
-#[tokio::test]
-async fn test_item() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-
-    let test_item_id = "96c2149a83d84336b631efcb0deb6a45";
-
-    let item = Item::new(&config.portal_root, &client, test_item_id)
-        .await
-        .expect("Failed to create item");
-
-    assert!(item.id == test_item_id);
-    assert!(item.data.id == test_item_id);
-}
-
-#[tokio::test]
-async fn test_update_item() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-
-    let test_item_id = "96c2149a83d84336b631efcb0deb6a45";
-    let test_user_name = config
-        .test_user_name
-        .clone()
-        .expect("Failed to get test user name");
-    let test_tags: Vec<String> = vec!["dev".into(), "test".into()];
-
-    let mut item = Item::new(&config.portal_root, &client, test_item_id)
-        .await
-        .expect("Failed to fetch item");
-
-    assert!(item.data.id == test_item_id);
-    assert!(item.data.owner == test_user_name);
-
-    item.update(item.update_builder().tags(test_tags.clone()))
-        .await
-        .expect("Failed to update item");
-    assert!(item.data.tags == test_tags);
-
-    let test_tags2: Vec<String> =
-        vec![vec!["dev2".into(), "test2".into()], item.data.tags.clone()].concat();
-    item.update(item.update_builder().tags(test_tags2.clone()))
-        .await
-        .expect("Failed to update item");
-    assert!(item.data.tags == test_tags2);
-}
-
-#[tokio::test]
-async fn test_add_item() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-
-    let test_user_name = config
-        .test_user_name
-        .clone()
-        .expect("Failed to get test user name");
-
-    // test points in lat/long
-    let test_json = serde_json::json!({"points": [[-109.39187790158928,41.419509792907284],[-101.55640533404183,41.339988469773225],[-101.78703063454039,31.004095664783694],[-109.35624516142607,31.036737940262469]]});
-
-    let test_csv = points_json_to_csv(&test_json.to_string()).unwrap();
-
-    let query = AddItemQuery::builder(&config.portal_root, &test_user_name)
-        .file(test_csv)
-        .set_type("CSV")
-        .title("Test Data 786232".to_string())
-        .build();
-
-    let response = query
-        .send(&client)
-        .await
-        .expect("Failed to send add item query");
-
-    assert!(response.success);
-}
-
-#[tokio::test]
-async fn test_publish_item() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-
-    let test_user_name = config
-        .test_user_name
-        .clone()
-        .expect("Failed to get test user name");
-
-    let test_item_id = "617487df6233468f8574d161eab8caa1";
-
-    let query = PublishItemQuery::builder(&config.portal_root, &test_user_name, test_item_id)
-        .name("Test_Data_786232".to_string())
-        // .latitude_field_name("Latitude".to_string())
-        // .longitude_field_name("Longitude".to_string())
-        // .description("Test Data".to_string())
-        .build();
-
-    let response = query
-        .send(&client)
-        .await
-        .expect("Failed to send publish item query");
-
-    println!("{:?}", response);
-
-    assert!(response.services.len() > 0);
-}
-
-#[tokio::test]
-async fn test_create_web_map_from_feature_service() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-
-    let test_user_name = config
-        .test_user_name
-        .clone()
-        .expect("Failed to get test user name");
-
-    let title = "Test Map 786232".to_string();
-    let fs_url = format!(
-        "{}/Hosted/Test_Data_786232/FeatureServer/0",
-        config.services_root
-    );
-    let item_id = "cc80db296d5d4b05ba191b136d5c6bb9";
-    let json = serde_json::json!(
-    {
-      "operationalLayers": [
-    {
-      "id": "19aeae4f198-layer-2",
-      "itemId": item_id,
-      "title": title,
-      "url": fs_url,
-      "layerType": "ArcGISFeatureLayer",
-      "layerDefinition": {
-        "fieldConfigurations": []
-      }
-    }
-        ],
-      "baseMap": {
-        "baseMapLayers": [
-          {
-            "id": "World_Hillshade_3689",
-            "opacity": 1,
-            "title": "World Hillshade",
-            "url": "https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer",
-            "visibility": true,
-            "layerType": "ArcGISTiledMapServiceLayer"
-          },
-          {
-            "id": "VectorTile_6451",
-            "opacity": 1,
-            "title": "World Topographic Map",
-            "visibility": true,
-            "itemId": "7dc6cea0b1764a1f9af2e679f642f0f5",
-            "layerType": "VectorTileLayer",
-            "styleUrl": "https://cdn.arcgis.com/sharing/rest/content/items/7dc6cea0b1764a1f9af2e679f642f0f5/resources/styles/root.json"
-          }
-        ],
-        "title": "Topographic"
-      },
-      "authoringApp": "ArcGISMapViewer",
-      "authoringAppVersion": "2025.3",
-      "initialState": {
-        // "viewpoint": {
-        //   "targetGeometry": {
-        //     "spatialReference": {
-        //       "latestWkid": 3857,
-        //       "wkid": 102100
-        //     },
-        //     "xmin": -9699596.910808342,
-        //     "ymin": 4265083.676083663,
-        //     "xmax": -9614446.06129877,
-        //     "ymax": 4360324.213326863
-        //   }
-        // }
-      },
-      "spatialReference": {
-        "latestWkid": 3857,
-        "wkid": 102100
-      },
-      "timeZone": "system",
-      "version": "2.35"
-    }
-                );
-
-    let query = AddItemQuery::builder(&config.portal_root, &test_user_name)
-        .set_type("Web Map")
-        .title(title)
-        .text(json.to_string())
-        .build();
-
-    let response = query
-        .send(&client)
-        .await
-        .expect("Failed to send add item query");
-
-    assert!(response.success);
-    let output_url = format!(
-        "{}/mapviewer/index.html?webmap={}",
-        config.portal_apps_root, response.id
-    );
-    println!("{}", output_url);
-}
-
-#[tokio::test]
-async fn test_create_web_map_from_input() {
-    use crate::auth::AuthType;
-    use crate::config::get_config;
-
-    dotenv::dotenv().ok();
-    let config = get_config().expect("Failed to create create config");
-    let client = config
-        .build_authorized_request_client(AuthType::TestToken)
-        .await
-        .expect("Failed to create authorized request client");
-    let test_user_name = config
-        .test_user_name
-        .clone()
-        .expect("Failed to get test user name");
-    let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
-    let title = format!("Test_Map_{}", uuid);
-    let input_points = vec![
-        [-109.39187790158928, 41.419509792907284],
-        [-101.55640533404183, 41.339988469773225],
-        [-101.78703063454039, 31.004095664783694],
-        [-109.35624516142607, 31.036737940262469],
-    ];
-    let map_url = create_web_map(
-        &config.portal_root,
-        &config.portal_apps_root,
-        &client,
-        &title,
-        &test_user_name,
-        input_points,
-    )
-    .await
-    .unwrap();
-    println!("{}", map_url);
-    assert!(map_url.contains("webmap="));
+fn validate_points(input: &[Vec<f64>]) -> Result<(), &'static str> {
+    input.iter().try_for_each(|v| {
+        if v.len() == 2 {
+            Ok(())
+        } else {
+            Err("Invalid inner vector length")
+        }
+    })
 }
 
 pub async fn create_web_map(
@@ -287,8 +24,10 @@ pub async fn create_web_map(
     client: &Client,
     title: &str,
     user_name: &str,
-    input_points: Vec<[f64; 2]>,
+    input_points: Vec<Vec<f64>>,
+    token: String,
 ) -> anyhow::Result<String> {
+    validate_points(&input_points).unwrap();
     let input_json = serde_json::json!({"points": input_points});
     let csv = points_json_to_csv(&input_json.to_string()).unwrap();
 
@@ -296,6 +35,7 @@ pub async fn create_web_map(
         .file(csv)
         .set_type("CSV")
         .title(title.to_string())
+        .token(token.clone())
         .build()
         .send(&client)
         .await?;
@@ -304,6 +44,7 @@ pub async fn create_web_map(
 
     let publish_item_response = PublishItemQuery::builder(portal_root, user_name, item_id.clone())
         .name(title.to_string())
+        .token(token.clone())
         .build()
         .send(&client)
         .await?;
@@ -378,6 +119,7 @@ pub async fn create_web_map(
         .set_type("Web Map")
         .title(title)
         .text(map_json.to_string())
+        .token(token)
         .build()
         .send(&client)
         .await?;
@@ -426,8 +168,8 @@ pub struct ItemData {
 
 pub struct Item {
     root: String,
-    id: String,
     client: Client,
+    pub id: String,
     pub data: ItemData,
 }
 

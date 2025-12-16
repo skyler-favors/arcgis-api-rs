@@ -12,6 +12,12 @@ pub struct Settings {
     pub token_expiration: String,
     pub test_token: Option<SecretString>,
     pub test_user_name: Option<String>,
+
+    pub arcgis_portal: String,
+    pub arcgis_api_root: String,
+    pub arcgis_portal_apps: String,
+    pub arcgis_username: SecretString,
+    pub arcgis_password: SecretString,
 }
 
 pub fn get_config() -> Result<Settings, config::ConfigError> {

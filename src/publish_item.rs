@@ -405,6 +405,7 @@ pub struct PublishItemQueryParams {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub output_type: Option<String>,
     pub f: String,
+    pub token: Option<String>,
 }
 
 impl PublishItemQueryParams {
@@ -503,6 +504,11 @@ impl PublishItemQueryBuilder {
         self
     }
 
+    pub fn token(mut self, token: impl Into<String>) -> Self {
+        self.params.token = Some(token.into());
+        self
+    }
+
     pub fn build(mut self) -> PublishItemQuery {
         let params = CsvPublishParameters {
             r#type: PublishType::Csv,
@@ -533,8 +539,14 @@ impl PublishItemQueryBuilder {
         };
         self.params.publish_parameters = params;
 
+        let url = if let Some(token) = &self.params.token {
+            format!("{}?token={}", self.url, token)
+        } else {
+            self.url
+        };
+
         PublishItemQuery {
-            url: self.url,
+            url,
             params: self.params,
         }
     }

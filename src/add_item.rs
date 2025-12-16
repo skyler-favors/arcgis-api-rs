@@ -220,6 +220,8 @@ pub struct AddItemParams {
     pub async_upload: Option<bool>,
 
     pub f: String,
+
+    pub token: Option<String>,
 }
 
 impl AddItemParams {
@@ -501,9 +503,20 @@ impl AddItemQueryBuilder {
         self
     }
 
+    pub fn token(mut self, token: impl Into<String>) -> Self {
+        self.params.token = Some(token.into());
+        self
+    }
+
     pub fn build(self) -> AddItemQuery {
+        let url = if let Some(token) = &self.params.token {
+            format!("{}?token={}", self.url, token)
+        } else {
+            self.url
+        };
+
         AddItemQuery {
-            url: self.url,
+            url,
             params: self.params,
         }
     }

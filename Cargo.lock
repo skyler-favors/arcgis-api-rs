@@ -42,6 +42,7 @@ dependencies = [
  "keyring",
  "log",
  "oauth2",
+ "once_cell",
  "open",
  "reqwest 0.12.15",
  "secrecy",
