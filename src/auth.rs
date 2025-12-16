@@ -1,7 +1,11 @@
 use reqwest::{header, Client};
 use secrecy::{ExposeSecret, SecretString};
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+};
+use tokio::sync::{Mutex, RwLock};
 
 use crate::{config::Settings, parser::parse_response};
 
@@ -77,5 +81,142 @@ impl Settings {
         headers.insert("X-Esri-Authorization", auth_value.clone());
 
         Ok(Client::builder().default_headers(headers).build()?)
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TokenResponse {
+    pub token: String,
+    pub expires: i64,
+    pub ssl: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct ArcGISAccessToken {
+    pub value: String,
+    pub expires: Instant,
+}
+
+impl ArcGISAccessToken {
+    fn needs_refresh(&self, skew: Duration) -> bool {
+        Instant::now() + skew >= self.expires
+    }
+}
+
+fn duration_until(unix_ts: i64) -> Option<Duration> {
+    let target = UNIX_EPOCH.checked_add(Duration::from_secs(unix_ts as u64))?;
+    target.duration_since(SystemTime::now()).ok()
+}
+
+pub struct ArcGISProvider {
+    pub client: reqwest::Client,
+    pub portal: String,
+    pub username: SecretString,
+    pub password: SecretString,
+    pub referer: String, // point to this server
+}
+
+impl ArcGISProvider {
+    pub async fn fetch_token(&self) -> anyhow::Result<(String, Duration)> {
+        tracing::debug!(portal = %self.portal, "Fetching ArcGIS token");
+
+        let mut params = HashMap::new();
+        params.insert("username", self.username.expose_secret().to_string());
+        params.insert("password", self.password.expose_secret().to_string());
+        params.insert("referer", self.referer.to_string());
+        params.insert("expiration", "60".to_string());
+        params.insert("f", "json".to_string());
+
+        let response = self
+            .client
+            .post(format!("{}/sharing/rest/generateToken", self.portal))
+            .form(&params)
+            .send()
+            .await?
+            .json::<TokenResponse>()
+            .await?;
+
+        let ttl = duration_until(response.expires).unwrap_or(Duration::from_secs(60));
+        Ok((response.token, ttl))
+    }
+}
+
+#[derive(Default)]
+struct ArcGISTokenState {
+    token: Option<ArcGISAccessToken>,
+}
+
+pub struct ArcGISTokenManager {
+    state: RwLock<ArcGISTokenState>,
+    refresh_gate: Mutex<()>,
+    refresh_skew: Duration,
+    provider: ArcGISProvider,
+}
+
+impl ArcGISTokenManager {
+    pub fn new(provider: ArcGISProvider) -> Self {
+        Self {
+            state: RwLock::new(ArcGISTokenState::default()),
+            refresh_gate: Mutex::new(()),
+            refresh_skew: Duration::from_secs(60),
+            provider,
+        }
+    }
+
+    pub fn with_skew(mut self, skew: Duration) -> Self {
+        self.refresh_skew = skew;
+        self
+    }
+
+    /// Handler-facing API: cheap read-mostly path, refreshes when needed.
+    pub async fn get(&self) -> anyhow::Result<String> {
+        // Fast path: many readers, no mutex.
+        if let Some(tok) = self.state.read().await.token.as_ref() {
+            if !tok.needs_refresh(self.refresh_skew) {
+                return Ok(tok.value.clone());
+            }
+        }
+
+        // Slow path: refresh (single flight).
+        self.refresh_if_needed().await?;
+
+        // Return published token.
+        let guard = self.state.read().await;
+        let tok = guard
+            .token
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("token missing"))?;
+        Ok(tok.value.clone())
+    }
+
+    async fn refresh_if_needed(&self) -> anyhow::Result<()> {
+        tracing::debug!("Refreshing ArcGIS token");
+
+        let _gate = self.refresh_gate.lock().await;
+
+        // Double-check after acquiring gate.
+        if let Some(tok) = self.state.read().await.token.as_ref() {
+            if !tok.needs_refresh(self.refresh_skew) {
+                return Ok(());
+            }
+        }
+
+        let (value, ttl) = self.provider.fetch_token().await?;
+        let expires = Instant::now() + ttl;
+
+        let mut w = self.state.write().await;
+        w.token = Some(ArcGISAccessToken { value, expires });
+        Ok(())
+    }
+
+    /// Optional: warm-up at startup.
+    pub async fn warmup(&self) -> anyhow::Result<()> {
+        let _gate = self.refresh_gate.lock().await;
+        let (value, ttl) = self.provider.fetch_token().await?;
+        let expires = Instant::now() + ttl;
+
+        let mut w = self.state.write().await;
+        w.token = Some(ArcGISAccessToken { value, expires });
+        Ok(())
     }
 }
