@@ -3,8 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     add_item::{points_json_to_csv, AddItemQuery},
-    auth::AuthType,
-    config::Settings,
     parser::parse_response,
     publish_item::PublishItemQuery,
     update_item::UpdateItemQueryBuilder,
@@ -12,6 +10,7 @@ use crate::{
 
 #[tokio::test]
 async fn test_item() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
 
     dotenv::dotenv().ok();
@@ -33,6 +32,7 @@ async fn test_item() {
 
 #[tokio::test]
 async fn test_update_item() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
 
     dotenv::dotenv().ok();
@@ -71,6 +71,7 @@ async fn test_update_item() {
 
 #[tokio::test]
 async fn test_add_item() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
 
     dotenv::dotenv().ok();
@@ -106,6 +107,7 @@ async fn test_add_item() {
 
 #[tokio::test]
 async fn test_publish_item() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
 
     dotenv::dotenv().ok();
@@ -141,6 +143,7 @@ async fn test_publish_item() {
 
 #[tokio::test]
 async fn test_create_web_map_from_feature_service() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
 
     dotenv::dotenv().ok();
@@ -243,7 +246,9 @@ async fn test_create_web_map_from_feature_service() {
 
 #[tokio::test]
 async fn test_create_web_map_from_input() {
+    use crate::auth::AuthType;
     use crate::config::get_config;
+
     dotenv::dotenv().ok();
     let config = get_config().expect("Failed to create create config");
     let client = config
