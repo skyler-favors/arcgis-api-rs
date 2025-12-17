@@ -152,7 +152,8 @@ pub struct ArcGISProvider {
     pub portal: String,
     pub username: SecretString,
     pub password: SecretString,
-    pub referer: String, // point to this server
+    pub referer: String,    // point to this server
+    pub expiration: String, // in minutes
 }
 
 impl ArcGISProvider {
@@ -163,7 +164,7 @@ impl ArcGISProvider {
         params.insert("username", self.username.expose_secret().to_string());
         params.insert("password", self.password.expose_secret().to_string());
         params.insert("referer", self.referer.to_string());
-        params.insert("expiration", "1".to_string());
+        params.insert("expiration", self.expiration.to_string());
         params.insert("f", "json".to_string());
 
         let response = self
