@@ -33,7 +33,7 @@ impl ApplyEditsQuery {
         url: &str,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let url = format!("{}/applyEdits", url);
-        println!("params: {:?}", self.params);
+        //println!("params: {:?}", self.params);
         client.post(url).form(&self.params).send().await
     }
 }
@@ -79,24 +79,18 @@ impl ApplyEditsQueryBuilder {
         let mut params: HashMap<String, String> = HashMap::new();
         params.insert(
             "adds".into(),
-            serde_json::to_string(&self.adds)
-                .unwrap_or("".to_string())
-                .replace("\"", "")
-                .replace(" ", ""),
+            serde_json::to_string(&self.adds).unwrap_or("".to_string()), //.replace("\"", "")
+                                                                         //.replace(" ", ""),
         );
         params.insert(
             "updates".into(),
-            serde_json::to_string(&self.updates)
-                .unwrap_or("".to_string())
-                .replace("\"", "")
-                .replace(" ", ""),
+            serde_json::to_string(&self.updates).unwrap_or("".to_string()), //.replace("\"", "")
+                                                                            //.replace(" ", ""),
         );
         params.insert(
             "deletes".into(),
-            serde_json::to_string(&self.deletes)
-                .unwrap_or("".to_string())
-                .replace("\"", "")
-                .replace(" ", ""),
+            serde_json::to_string(&self.deletes).unwrap_or("".to_string()), //.replace("\"", "")
+                                                                            //.replace(" ", ""),
         );
         params.insert(
             "returnEditResults".into(),
