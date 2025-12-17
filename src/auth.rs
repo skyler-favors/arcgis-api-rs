@@ -99,13 +99,52 @@ pub struct ArcGISAccessToken {
 
 impl ArcGISAccessToken {
     fn needs_refresh(&self, skew: Duration) -> bool {
-        Instant::now() + skew >= self.expires
+        let now = Instant::now();
+        let threshold = now + skew;
+        let needs_refresh = threshold >= self.expires;
+
+        if needs_refresh {
+            let remaining = self.expires.saturating_duration_since(now);
+            tracing::debug!(
+                remaining_seconds = remaining.as_secs(),
+                skew_seconds = skew.as_secs(),
+                "Token needs refresh"
+            );
+        }
+
+        needs_refresh
+    }
+
+    /// Returns the remaining time until token expires
+    fn time_until_expiry(&self) -> Duration {
+        self.expires.saturating_duration_since(Instant::now())
     }
 }
 
+/// Calculates the duration from now until the given Unix timestamp.
+/// ArcGIS returns timestamps in milliseconds since Unix epoch.
 fn duration_until(unix_ts: i64) -> Option<Duration> {
-    let target = UNIX_EPOCH.checked_add(Duration::from_secs(unix_ts as u64))?;
-    target.duration_since(SystemTime::now()).ok()
+    // ArcGIS returns timestamps in milliseconds
+    let target = UNIX_EPOCH.checked_add(Duration::from_millis(unix_ts as u64))?;
+    let duration = target.duration_since(SystemTime::now()).ok()?;
+
+    // Validate the duration is reasonable (between 1 minute and 15 days)
+    let secs = duration.as_secs();
+    if secs < 60 {
+        tracing::warn!(
+            unix_ts = unix_ts,
+            duration_secs = secs,
+            "Token TTL is less than 60 seconds, which seems unreasonable"
+        );
+    } else if secs > 15 * 24 * 3600 {
+        tracing::warn!(
+            unix_ts = unix_ts,
+            duration_secs = secs,
+            "Token TTL is more than 15 days, which exceeds ArcGIS maximum"
+        );
+    }
+
+    Some(duration)
 }
 
 pub struct ArcGISProvider {
@@ -118,13 +157,13 @@ pub struct ArcGISProvider {
 
 impl ArcGISProvider {
     pub async fn fetch_token(&self) -> anyhow::Result<(String, Duration)> {
-        tracing::debug!(portal = %self.portal, "Fetching ArcGIS token");
+        tracing::info!(portal = %self.portal, "Fetching new ArcGIS token");
 
         let mut params = HashMap::new();
         params.insert("username", self.username.expose_secret().to_string());
         params.insert("password", self.password.expose_secret().to_string());
         params.insert("referer", self.referer.to_string());
-        params.insert("expiration", "60".to_string());
+        params.insert("expiration", "1".to_string());
         params.insert("f", "json".to_string());
 
         let response = self
@@ -136,7 +175,21 @@ impl ArcGISProvider {
             .json::<TokenResponse>()
             .await?;
 
-        let ttl = duration_until(response.expires).unwrap_or(Duration::from_secs(60));
+        tracing::debug!(
+            expires_timestamp = response.expires,
+            "Received token from ArcGIS"
+        );
+
+        let ttl = duration_until(response.expires).unwrap_or_else(|| {
+            tracing::error!(
+                expires_timestamp = response.expires,
+                "Failed to calculate token TTL, using default 60 seconds"
+            );
+            Duration::from_secs(60)
+        });
+
+        tracing::info!(ttl_seconds = ttl.as_secs(), "Token fetched successfully");
+
         Ok((response.token, ttl))
     }
 }
@@ -158,7 +211,7 @@ impl ArcGISTokenManager {
         Self {
             state: RwLock::new(ArcGISTokenState::default()),
             refresh_gate: Mutex::new(()),
-            refresh_skew: Duration::from_secs(60),
+            refresh_skew: Duration::from_secs(5),
             provider,
         }
     }
@@ -173,8 +226,17 @@ impl ArcGISTokenManager {
         // Fast path: many readers, no mutex.
         if let Some(tok) = self.state.read().await.token.as_ref() {
             if !tok.needs_refresh(self.refresh_skew) {
+                let remaining = tok.time_until_expiry();
+                tracing::trace!(
+                    remaining_seconds = remaining.as_secs(),
+                    "Returning cached token"
+                );
                 return Ok(tok.value.clone());
             }
+
+            tracing::debug!("Token needs refresh, entering slow path");
+        } else {
+            tracing::debug!("No token cached, fetching initial token");
         }
 
         // Slow path: refresh (single flight).
@@ -182,27 +244,37 @@ impl ArcGISTokenManager {
 
         // Return published token.
         let guard = self.state.read().await;
-        let tok = guard
-            .token
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("token missing"))?;
+        let tok = guard.token.as_ref().ok_or_else(|| {
+            tracing::error!("Token missing after refresh");
+            anyhow::anyhow!("token missing after refresh")
+        })?;
+
+        tracing::debug!("Returning refreshed token");
         Ok(tok.value.clone())
     }
 
     async fn refresh_if_needed(&self) -> anyhow::Result<()> {
-        tracing::debug!("Refreshing ArcGIS token");
+        tracing::debug!("Attempting to acquire refresh gate");
 
         let _gate = self.refresh_gate.lock().await;
 
         // Double-check after acquiring gate.
         if let Some(tok) = self.state.read().await.token.as_ref() {
             if !tok.needs_refresh(self.refresh_skew) {
+                tracing::debug!("Another thread already refreshed the token");
                 return Ok(());
             }
         }
 
+        tracing::info!("Refreshing ArcGIS token");
+
         let (value, ttl) = self.provider.fetch_token().await?;
         let expires = Instant::now() + ttl;
+
+        tracing::info!(
+            ttl_seconds = ttl.as_secs(),
+            "Token refresh successful, storing new token"
+        );
 
         let mut w = self.state.write().await;
         w.token = Some(ArcGISAccessToken { value, expires });
@@ -211,9 +283,16 @@ impl ArcGISTokenManager {
 
     /// Optional: warm-up at startup.
     pub async fn warmup(&self) -> anyhow::Result<()> {
+        tracing::info!("Warming up token manager");
+
         let _gate = self.refresh_gate.lock().await;
         let (value, ttl) = self.provider.fetch_token().await?;
         let expires = Instant::now() + ttl;
+
+        tracing::info!(
+            ttl_seconds = ttl.as_secs(),
+            "Warmup complete, initial token cached"
+        );
 
         let mut w = self.state.write().await;
         w.token = Some(ArcGISAccessToken { value, expires });
