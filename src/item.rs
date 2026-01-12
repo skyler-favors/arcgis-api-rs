@@ -11,16 +11,22 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct PointWithData {
-    pub coordinates: [f64; 2], // [longitude, latitude]
+    pub coordinates: Vec<f64>, // [longitude, latitude]
     pub data: HashMap<String, String>,
 }
 
 fn validate_points(input: &[PointWithData]) -> Result<(), &'static str> {
-    // All points should have valid coordinates
     if input.is_empty() {
         return Err("Input points cannot be empty");
     }
-    Ok(())
+
+    input.iter().try_for_each(|v| {
+        if v.coordinates.len() == 2 {
+            Ok(())
+        } else {
+            Err("Invalid inner vector length")
+        }
+    })
 }
 
 pub async fn create_web_map(

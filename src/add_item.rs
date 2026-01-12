@@ -28,7 +28,9 @@ pub fn points_json_to_csv(json: &str) -> Result<String, Box<dyn std::error::Erro
 
 /// Convert points with data to CSV format
 /// Collects all unique field names across all points and creates a CSV with those columns
-pub fn points_to_csv(points: &[crate::item::PointWithData]) -> Result<String, Box<dyn std::error::Error>> {
+pub fn points_to_csv(
+    points: &[crate::item::PointWithData],
+) -> Result<String, Box<dyn std::error::Error>> {
     if points.is_empty() {
         return Err("Points vector cannot be empty".into());
     }
@@ -56,9 +58,10 @@ pub fn points_to_csv(points: &[crate::item::PointWithData]) -> Result<String, Bo
 
     // Build CSV rows
     for point in points {
-        let [lon, lat] = point.coordinates;
+        let lon = point.coordinates[0];
+        let lat = point.coordinates[1];
         out.push_str(&format!("{},{}", lon, lat));
-        
+
         for field_name in &field_names {
             out.push(',');
             if let Some(value) = point.data.get(field_name) {
