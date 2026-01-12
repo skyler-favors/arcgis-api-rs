@@ -9,7 +9,7 @@ use crate::{
     update_item::UpdateItemQueryBuilder,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PointWithData {
     pub coordinates: Vec<f64>, // [longitude, latitude]
     pub data: HashMap<String, String>,
