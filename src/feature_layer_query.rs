@@ -150,7 +150,7 @@ pub struct EsriQueryResponse {
     pub features: Vec<EsriFeature>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EsriFeature {
     pub attributes: Value,
     pub geometry: Option<Value>,
