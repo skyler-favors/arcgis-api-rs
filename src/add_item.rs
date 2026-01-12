@@ -3,6 +3,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_urlencoded;
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 use crate::parser::parse_response;
@@ -20,6 +21,59 @@ pub fn points_json_to_csv(json: &str) -> Result<String, Box<dyn std::error::Erro
 
     for [lon, lat] in pc.points {
         out.push_str(&format!("{lon},{lat}\n"));
+    }
+
+    Ok(out)
+}
+
+/// Convert points with data to CSV format
+/// Collects all unique field names across all points and creates a CSV with those columns
+pub fn points_to_csv(points: &[crate::item::PointWithData]) -> Result<String, Box<dyn std::error::Error>> {
+    if points.is_empty() {
+        return Err("Points vector cannot be empty".into());
+    }
+
+    // Collect all unique field names from all points
+    let mut field_names: HashSet<String> = HashSet::new();
+    for point in points {
+        for key in point.data.keys() {
+            field_names.insert(key.clone());
+        }
+    }
+
+    // Convert to sorted vector for consistent ordering
+    let mut field_names: Vec<String> = field_names.into_iter().collect();
+    field_names.sort();
+
+    // Build CSV header
+    let mut out = String::new();
+    out.push_str("Longitude,Latitude");
+    for field_name in &field_names {
+        out.push(',');
+        out.push_str(field_name);
+    }
+    out.push('\n');
+
+    // Build CSV rows
+    for point in points {
+        let [lon, lat] = point.coordinates;
+        out.push_str(&format!("{},{}", lon, lat));
+        
+        for field_name in &field_names {
+            out.push(',');
+            if let Some(value) = point.data.get(field_name) {
+                // Escape CSV values if they contain commas, quotes, or newlines
+                if value.contains(',') || value.contains('"') || value.contains('\n') {
+                    out.push('"');
+                    out.push_str(&value.replace('"', "\"\""));
+                    out.push('"');
+                } else {
+                    out.push_str(value);
+                }
+            }
+            // If field is missing, leave it empty
+        }
+        out.push('\n');
     }
 
     Ok(out)

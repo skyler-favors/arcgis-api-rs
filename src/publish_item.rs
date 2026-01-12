@@ -240,150 +240,161 @@ impl CsvPublishParameters {
         Ok(serde_urlencoded::to_string(self)?)
     }
 
-    pub fn json(&self, name: impl Into<String>) -> String {
-        r#"
-{
-   "type":"csv",
-   "name":"{}",
-   "sourceUrl":"",
-   "maxRecordCount":1000,
-   "targetSR":{
-      "wkid":102100,
-      "latestWkid":3857
-   },
-   "editorTrackingInfo":{
-      "enableEditorTracking":false,
-      "enableOwnershipAccessControl":false,
-      "allowOthersToUpdate":true,
-      "allowOthersToDelete":false
-   },
-   "locationType":"coordinates",
-   "latitudeFieldName":"Latitude",
-   "longitudeFieldName":"Longitude",
-   "sourceSR":{
-      "wkid":4326,
-      "latestWkid":4326
-   },
-   "columnDelimiter":",",
-   "layerInfo":{
-      "currentVersion":11.3,
-      "id":0,
-      "name":"data",
-      "type":"Feature Layer",
-      "displayField":"",
-      "description":"",
-      "copyrightText":"",
-      "defaultVisibility":true,
-      "editFieldsInfo":null,
-      "relationships":[
-         
-      ],
-      "isDataVersioned":false,
-      "supportsRollbackOnFailureParameter":true,
-      "supportsAdvancedQueries":true,
-      "supportsValidateSQL":true,
-      "supportsCalculate":true,
-      "advancedQueryCapabilities":{
-         "supportsReturningQueryExtent":true,
-         "supportsStatistics":true,
-         "supportsDistinct":true,
-         "supportsPagination":true,
-         "supportsOrderBy":true,
-         "supportsQueryWithDistance":true
-      },
-      "geometryType":"esriGeometryPoint",
-      "drawingInfo":{
-         "renderer":{
-            "type":"simple",
-            "symbol":{
-               "type":"esriSMS",
-               "style":"esriSMSCircle",
-               "color":[
-                  129,
-                  140,
-                  0,
-                  255
-               ],
-               "size":4,
-               "angle":0,
-               "xoffset":0,
-               "yoffset":0,
-               "outline":{
-                  "color":[
-                     0,
-                     0,
-                     0,
-                     255
-                  ],
-                  "width":1
-               }
+    pub fn json(&self, name: impl Into<String>, additional_fields: Vec<String>) -> String {
+        let name = name.into();
+        
+        // Build fields array: always include Longitude and Latitude, then add additional fields
+        let mut fields = serde_json::json!([
+            {
+                "name": "Longitude",
+                "type": "esriFieldTypeDouble",
+                "alias": "Longitude",
+                "locationType": "longitude",
+                "sqlType": "sqlTypeDouble"
             },
-            "label":"",
-            "description":""
-         }
-      },
-      "hasM":false,
-      "hasZ":false,
-      "allowGeometryUpdates":true,
-      "hasAttachments":false,
-      "htmlPopupType":"esriServerHTMLPopupTypeNone",
-      "supportsApplyEditsWithGlobalIds":true,
-      "objectIdField":"",
-      "globalIdField":"",
-      "typeIdField":"",
-      "fields":[
-         {
-            "name":"Longitude",
-            "type":"esriFieldTypeDouble",
-            "alias":"Longitude",
-            "locationType":"longitude",
-            "sqlType":"sqlTypeDouble"
-         },
-         {
-            "name":"Latitude",
-            "type":"esriFieldTypeDouble",
-            "alias":"Latitude",
-            "locationType":"latitude",
-            "sqlType":"sqlTypeDouble"
-         }
-      ],
-      "types":[
-         
-      ],
-      "templates":[
-         {
-            "name":"New Feature",
-            "description":"",
-            "drawingTool":"esriFeatureEditToolPoint",
-            "prototype":{
-               "attributes":{
-                  "Longitude":null,
-                  "Latitude":null
-               }
+            {
+                "name": "Latitude",
+                "type": "esriFieldTypeDouble",
+                "alias": "Latitude",
+                "locationType": "latitude",
+                "sqlType": "sqlTypeDouble"
             }
-         }
-      ],
-      "useStandardizedQueries":true,
-      "enableZDefaults":false,
-      "zDefault":0,
-      "supportedQueryFormats":"JSON",
-      "hasStaticData":true,
-      "maxRecordCount":1000,
-      "capabilities":"Query",
-      "supportsCoordinatesQuantization":false,
-      "supportsAttachmentsByUploadId":true
-   },
-   "coordinateFieldType":"LatitudeAndLongitude",
-   "capabilities":"Query",
-   "hasStaticData":true,
-   "persistErrorRecordsForReview":true,
-   "dateFieldsTimeReference":{
-      "timeZone":"UTC"
-   }
-}
-        "#
-        .replace("{}", &name.into())
-        .to_string()
+        ]);
+        
+        // Add additional fields as strings
+        if let Some(fields_array) = fields.as_array_mut() {
+            for field_name in &additional_fields {
+                fields_array.push(serde_json::json!({
+                    "name": field_name,
+                    "type": "esriFieldTypeString",
+                    "alias": field_name,
+                    "sqlType": "sqlTypeOther",
+                    "length": 256
+                }));
+            }
+        }
+        
+        // Build template attributes: include all fields with null values
+        let mut attributes = serde_json::json!({
+            "Longitude": null,
+            "Latitude": null
+        });
+        
+        if let Some(attrs_obj) = attributes.as_object_mut() {
+            for field_name in &additional_fields {
+                attrs_obj.insert(field_name.clone(), serde_json::Value::Null);
+            }
+        }
+        
+        let json_obj = serde_json::json!({
+            "type": "csv",
+            "name": name,
+            "sourceUrl": "",
+            "maxRecordCount": 1000,
+            "targetSR": {
+                "wkid": 102100,
+                "latestWkid": 3857
+            },
+            "editorTrackingInfo": {
+                "enableEditorTracking": false,
+                "enableOwnershipAccessControl": false,
+                "allowOthersToUpdate": true,
+                "allowOthersToDelete": false
+            },
+            "locationType": "coordinates",
+            "latitudeFieldName": "Latitude",
+            "longitudeFieldName": "Longitude",
+            "sourceSR": {
+                "wkid": 4326,
+                "latestWkid": 4326
+            },
+            "columnDelimiter": ",",
+            "layerInfo": {
+                "currentVersion": 11.3,
+                "id": 0,
+                "name": "data",
+                "type": "Feature Layer",
+                "displayField": "",
+                "description": "",
+                "copyrightText": "",
+                "defaultVisibility": true,
+                "editFieldsInfo": null,
+                "relationships": [],
+                "isDataVersioned": false,
+                "supportsRollbackOnFailureParameter": true,
+                "supportsAdvancedQueries": true,
+                "supportsValidateSQL": true,
+                "supportsCalculate": true,
+                "advancedQueryCapabilities": {
+                    "supportsReturningQueryExtent": true,
+                    "supportsStatistics": true,
+                    "supportsDistinct": true,
+                    "supportsPagination": true,
+                    "supportsOrderBy": true,
+                    "supportsQueryWithDistance": true
+                },
+                "geometryType": "esriGeometryPoint",
+                "drawingInfo": {
+                    "renderer": {
+                        "type": "simple",
+                        "symbol": {
+                            "type": "esriSMS",
+                            "style": "esriSMSCircle",
+                            "color": [129, 140, 0, 255],
+                            "size": 4,
+                            "angle": 0,
+                            "xoffset": 0,
+                            "yoffset": 0,
+                            "outline": {
+                                "color": [0, 0, 0, 255],
+                                "width": 1
+                            }
+                        },
+                        "label": "",
+                        "description": ""
+                    }
+                },
+                "hasM": false,
+                "hasZ": false,
+                "allowGeometryUpdates": true,
+                "hasAttachments": false,
+                "htmlPopupType": "esriServerHTMLPopupTypeNone",
+                "supportsApplyEditsWithGlobalIds": true,
+                "objectIdField": "",
+                "globalIdField": "",
+                "typeIdField": "",
+                "fields": fields,
+                "types": [],
+                "templates": [
+                    {
+                        "name": "New Feature",
+                        "description": "",
+                        "drawingTool": "esriFeatureEditToolPoint",
+                        "prototype": {
+                            "attributes": attributes
+                        }
+                    }
+                ],
+                "useStandardizedQueries": true,
+                "enableZDefaults": false,
+                "zDefault": 0,
+                "supportedQueryFormats": "JSON",
+                "hasStaticData": true,
+                "maxRecordCount": 1000,
+                "capabilities": "Query",
+                "supportsCoordinatesQuantization": false,
+                "supportsAttachmentsByUploadId": true
+            },
+            "coordinateFieldType": "LatitudeAndLongitude",
+            "capabilities": "Query",
+            "hasStaticData": true,
+            "persistErrorRecordsForReview": true,
+            "dateFieldsTimeReference": {
+                "timeZone": "UTC"
+            }
+        });
+        
+        json_obj.to_string()
     }
 }
 
@@ -406,6 +417,8 @@ pub struct PublishItemQueryParams {
     pub output_type: Option<String>,
     pub f: String,
     pub token: Option<String>,
+    #[serde(skip)]
+    pub additional_fields: Vec<String>,
 }
 
 impl PublishItemQueryParams {
@@ -415,7 +428,7 @@ impl PublishItemQueryParams {
         // params["publishParameters"] = serde_json::json!(publish_parameters_json);
         params["publishParameters"] = serde_json::json!(self
             .publish_parameters
-            .json(self.publish_parameters.name.clone()));
+            .json(self.publish_parameters.name.clone(), self.additional_fields.clone()));
         Ok(serde_urlencoded::to_string(params)?)
     }
 }
@@ -506,6 +519,11 @@ impl PublishItemQueryBuilder {
 
     pub fn token(mut self, token: impl Into<String>) -> Self {
         self.params.token = Some(token.into());
+        self
+    }
+
+    pub fn additional_fields(mut self, fields: Vec<String>) -> Self {
+        self.params.additional_fields = fields;
         self
     }
 

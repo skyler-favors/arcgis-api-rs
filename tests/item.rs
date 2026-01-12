@@ -4,9 +4,10 @@ use arcgis_api_rs::{
     add_item::{points_json_to_csv, AddItemQuery},
     auth::{ArcGISProvider, ArcGISTokenManager, AuthType},
     config::{get_config, Settings},
-    item::{create_web_map, Item},
+    item::{create_web_map, Item, PointWithData},
     publish_item::PublishItemQuery,
 };
+use std::collections::HashMap;
 
 use once_cell::sync::Lazy;
 use secrecy::ExposeSecret;
@@ -22,6 +23,7 @@ static ARCGIS_TOKEN_MANAGER: Lazy<Arc<ArcGISTokenManager>> = Lazy::new(|| {
         username: TEST_CONFIG.arcgis_username.clone(),
         password: TEST_CONFIG.arcgis_password.clone(),
         referer: "127.0.0.1".to_string(),
+        expiration: "5".to_string(),
     };
 
     Arc::new(ArcGISTokenManager::new(provider))
@@ -243,12 +245,43 @@ async fn test_create_web_map_from_input() {
     let test_user_name = config.arcgis_username.expose_secret().to_string();
     let uuid = uuid::Uuid::new_v4().to_string().replace("-", "");
     let title = format!("Test_Map_{}", uuid);
+    
+    // Create points with associated data
     let input_points = vec![
-        vec![-109.39187790158928, 41.419509792907284],
-        vec![-101.55640533404183, 41.339988469773225],
-        vec![-101.78703063454039, 31.004095664783694],
-        vec![-109.35624516142607, 31.036737940262469],
+        PointWithData {
+            coordinates: [-109.39187790158928, 41.419509792907284],
+            data: HashMap::from([
+                ("Name".to_string(), "Point 1".to_string()),
+                ("Description".to_string(), "Northwest corner".to_string()),
+                ("Value".to_string(), "100".to_string()),
+            ]),
+        },
+        PointWithData {
+            coordinates: [-101.55640533404183, 41.339988469773225],
+            data: HashMap::from([
+                ("Name".to_string(), "Point 2".to_string()),
+                ("Description".to_string(), "Northeast corner".to_string()),
+                ("Value".to_string(), "200".to_string()),
+            ]),
+        },
+        PointWithData {
+            coordinates: [-101.78703063454039, 31.004095664783694],
+            data: HashMap::from([
+                ("Name".to_string(), "Point 3".to_string()),
+                ("Description".to_string(), "Southeast corner".to_string()),
+                ("Value".to_string(), "150".to_string()),
+            ]),
+        },
+        PointWithData {
+            coordinates: [-109.35624516142607, 31.036737940262469],
+            data: HashMap::from([
+                ("Name".to_string(), "Point 4".to_string()),
+                ("Description".to_string(), "Southwest corner".to_string()),
+                ("Value".to_string(), "175".to_string()),
+            ]),
+        },
     ];
+    
     let map_url = create_web_map(
         &config.arcgis_api_root,
         &config.portal_apps_root,

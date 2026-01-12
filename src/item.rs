@@ -1,21 +1,26 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 use crate::{
-    add_item::{points_json_to_csv, AddItemQuery},
+    add_item::{points_to_csv, AddItemQuery},
     parser::parse_response,
     publish_item::PublishItemQuery,
     update_item::UpdateItemQueryBuilder,
 };
 
-fn validate_points(input: &[Vec<f64>]) -> Result<(), &'static str> {
-    input.iter().try_for_each(|v| {
-        if v.len() == 2 {
-            Ok(())
-        } else {
-            Err("Invalid inner vector length")
-        }
-    })
+#[derive(Debug, Clone)]
+pub struct PointWithData {
+    pub coordinates: [f64; 2], // [longitude, latitude]
+    pub data: HashMap<String, String>,
+}
+
+fn validate_points(input: &[PointWithData]) -> Result<(), &'static str> {
+    // All points should have valid coordinates
+    if input.is_empty() {
+        return Err("Input points cannot be empty");
+    }
+    Ok(())
 }
 
 pub async fn create_web_map(
@@ -24,12 +29,21 @@ pub async fn create_web_map(
     client: &Client,
     title: &str,
     user_name: &str,
-    input_points: Vec<Vec<f64>>,
+    input_points: Vec<PointWithData>,
     token: String,
 ) -> anyhow::Result<String> {
     validate_points(&input_points).unwrap();
-    let input_json = serde_json::json!({"points": input_points});
-    let csv = points_json_to_csv(&input_json.to_string()).unwrap();
+    let csv = points_to_csv(&input_points).unwrap();
+
+    // Extract all unique field names from the points
+    let mut field_names: HashSet<String> = HashSet::new();
+    for point in &input_points {
+        for key in point.data.keys() {
+            field_names.insert(key.clone());
+        }
+    }
+    let mut field_names: Vec<String> = field_names.into_iter().collect();
+    field_names.sort();
 
     let add_item_response = AddItemQuery::builder(portal_root, user_name)
         .file(csv)
@@ -44,6 +58,8 @@ pub async fn create_web_map(
 
     let publish_item_response = PublishItemQuery::builder(portal_root, user_name, item_id.clone())
         .name(title.to_string())
+        // TODO: remove this and add dynamic field detection from uploaded CSV
+        .additional_fields(field_names.clone())
         .token(token.clone())
         .build()
         .send(&client)
@@ -54,6 +70,62 @@ pub async fn create_web_map(
 
     let fs_url = format!("{}/0", service.encoded_service_url.clone());
 
+    // Build fieldInfos dynamically based on actual data fields
+    let mut field_infos = vec![
+        serde_json::json!({
+            "fieldName": "objectid",
+            "isEditable": false,
+            "label": "OBJECTID",
+            "visible": false
+        }),
+        serde_json::json!({
+            "fieldName": "latitude",
+            "format": {
+                "digitSeparator": true,
+                "places": 2
+            },
+            "isEditable": true,
+            "label": "Latitude",
+            "visible": true
+        }),
+        serde_json::json!({
+            "fieldName": "longitude",
+            "format": {
+                "digitSeparator": true,
+                "places": 2
+            },
+            "isEditable": true,
+            "label": "Longitude",
+            "visible": true
+        }),
+    ];
+
+    // Add data fields
+    for field_name in &field_names {
+        field_infos.push(serde_json::json!({
+            "fieldName": field_name.to_lowercase(),
+            "isEditable": true,
+            "label": field_name,
+            "visible": true
+        }));
+    }
+
+    // Determine popup title - use first field or title
+    let popup_title = if field_names
+        .iter()
+        .map(|f| f.to_lowercase())
+        .collect::<Vec<String>>()
+        .contains(&"name".to_string())
+    {
+        let name = field_names
+            .iter()
+            .find(|&x| x.to_lowercase() == "name")
+            .unwrap();
+        format!("{{{}}}", name)
+    } else {
+        title.to_string()
+    };
+
     let map_json = serde_json::json!(
     {
       "operationalLayers": [
@@ -63,6 +135,20 @@ pub async fn create_web_map(
       "title": title,
       "url": fs_url,
       "layerType": "ArcGISFeatureLayer",
+        "popupInfo": {
+        "popupElements": [
+          {
+            "type": "fields"
+          },
+          {
+            "type": "attachments",
+            "displayType": "auto"
+          }
+        ],
+        "showAttachments": true,
+        "fieldInfos": field_infos,
+        "title": popup_title
+      },
       "layerDefinition": {
         "fieldConfigurations": []
       }
