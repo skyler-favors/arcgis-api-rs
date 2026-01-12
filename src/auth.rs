@@ -147,13 +147,16 @@ fn duration_until(unix_ts: i64) -> Option<Duration> {
     Some(duration)
 }
 
+/// ArcGIS Provider
 pub struct ArcGISProvider {
     pub client: reqwest::Client,
     pub portal: String,
     pub username: SecretString,
     pub password: SecretString,
-    pub referer: String,    // point to this server
-    pub expiration: String, // in minutes
+    /// point to this server
+    pub referer: String,
+    /// in minutes; i.e. "60" for 1 hour
+    pub expiration: String,
 }
 
 impl ArcGISProvider {
