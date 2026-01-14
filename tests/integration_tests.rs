@@ -47,7 +47,6 @@ async fn test_token() {
         )
         .await
         .unwrap();
-    println!("{:?}", response);
 }
 
 #[tokio::test]
@@ -66,16 +65,10 @@ async fn create_group() {
         .send()
         .await
         .expect("Failed to send create group query");
-
     let group = create_result.group;
-
     assert!(&group.title == &title);
 
-    // let delete_result = group
-    //     .delete(&config.portal_root, &client, &group.id)
-    //     .await
-    //     .expect("Failed to delete group");
-    //
-    // assert!(delete_result.success);
-    // assert!(delete_result.group_id == group.id);
+    let delete_result = client.groups(&group.id).delete().send().await.unwrap();
+    assert!(delete_result.success);
+    assert!(delete_result.group_id == group.id);
 }

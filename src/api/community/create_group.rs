@@ -185,7 +185,7 @@ impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
         self
     }
 
-    pub async fn send(&self) -> Result<GroupResponse> {
+    pub async fn send(&self) -> Result<CreateGroupResponse> {
         let handler = self.handler.as_ref().unwrap();
 
         let url = handler

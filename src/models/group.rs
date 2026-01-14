@@ -2,8 +2,15 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize)]
+pub struct DeleteGroupsResponse {
+    pub success: bool,
+    #[serde(rename = "groupId")]
+    pub group_id: String,
+}
+
 #[derive(Debug, Deserialize)]
-pub struct GroupResponse {
+pub struct CreateGroupResponse {
     pub success: bool,
     pub group: Group,
 }

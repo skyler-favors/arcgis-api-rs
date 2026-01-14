@@ -1,5 +1,5 @@
 use crate::{
-    api::CreateGroupHandler,
+    api::{CreateGroupHandler, GroupsHandler},
     error::{
         ArcgisError, HttpSnafu, ReqwestSnafu, SerdeUrlEncodedSnafu, UriParseError, UriParseSnafu,
         UrlParseSnafu,
@@ -465,6 +465,10 @@ impl ArcGISSharingClient {
 impl ArcGISSharingClient {
     pub fn create_group(&self) -> CreateGroupHandler<'_> {
         CreateGroupHandler::new(self)
+    }
+
+    pub fn groups(&self, id: impl Into<String>) -> GroupsHandler<'_> {
+        GroupsHandler::new(self, id.into())
     }
 }
 
