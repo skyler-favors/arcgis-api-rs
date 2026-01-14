@@ -1,4 +1,4 @@
-use crate::client::ArcGISSharingClient;
+pub use crate::client::ArcGISSharingClient;
 use once_cell::sync::Lazy;
 use std::sync::Arc;
 
@@ -6,6 +6,7 @@ mod api;
 mod auth;
 mod client;
 mod error;
+mod from_response;
 mod models;
 
 #[cfg(feature = "default-client")]

@@ -1,0 +1,51 @@
+use once_cell::sync::Lazy;
+
+fn init() {
+    dotenvy::dotenv().ok();
+
+    let username = std::env::var("APP_ARCGIS_USERNAME")
+        .expect("No username found; Missing env var: APP_ARCGIS_USERNAME");
+    let password = std::env::var("APP_ARCGIS_PASSWORD")
+        .expect("No password found; Missing env var: APP_ARCGIS_PASSWORD");
+    let portal = std::env::var("APP_ARCGIS_PORTAL")
+        .expect("No portal found; Missing env var: APP_ARCGIS_PORTAL");
+    let referer = "127.0.0.1".to_string();
+    let expiration = "1";
+
+    let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
+        .portal(portal)
+        .legacy_auth(username, password, referer, expiration)
+        .build();
+    arcgis_sharing_rs::initialise(client);
+}
+
+#[allow(dead_code)]
+static SETUP: Lazy<()> = Lazy::new(|| {
+    init();
+});
+
+#[derive(serde::Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+struct TestResponse {
+    //{"currentVersion":"2024.1","enterpriseVersion":"11.3.0","enterpriseBuild":"0"}
+    // current_version: String,
+    // enterprise_version: String,
+    // enterprise_build: String,
+    #[serde(flatten)]
+    extra_fields: std::collections::HashMap<String, serde_json::Value>,
+}
+
+#[tokio::test]
+async fn test_token() {
+    Lazy::force(&SETUP);
+    let client = arcgis_sharing_rs::instance();
+    let response: TestResponse = client
+        .get(
+            format!("{}/sharing/rest/community/self", &client.portal),
+            Some(&[("f", "json")]),
+        )
+        .await
+        .unwrap();
+    println!("{:?}", response);
+}
