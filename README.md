@@ -1,4 +1,4 @@
-# arcgis-api-rs
+# arcgis-sharing-rs
 
 A Rust client library for the ArcGIS REST API, providing ergonomic access to feature layers, item management, and authentication.
 

@@ -1,25 +1,25 @@
-#![recursion_limit = "256"]
+use crate::client::ArcGISSharingClient;
+use once_cell::sync::Lazy;
+use std::sync::Arc;
 
-pub mod auth;
-pub mod config;
-pub mod feature_layer;
-pub mod feature_layer_query;
-pub mod feature_layer_update;
-pub mod group;
-pub mod oauth;
-pub mod token;
-//pub mod oauth;
-pub mod add_item;
-pub mod item;
-pub mod parser;
-pub mod publish_item;
-pub mod update_item;
+mod api;
+mod auth;
+mod client;
+mod error;
+mod models;
 
-// pub trait Query {
-//     pub fn new() -> impl QueryBuilder;
-//     pub fn send();
-// }
-// pub trait QueryBuilder {
-//     pub fn new() -> Self;
-//     pub fn build() -> impl Query;
-// }
+#[cfg(feature = "default-client")]
+static STATIC_INSTANCE: Lazy<arc_swap::ArcSwap<ArcGISSharingClient>> =
+    Lazy::new(|| arc_swap::ArcSwap::from_pointee(ArcGISSharingClient::default()));
+
+#[cfg(feature = "default-client")]
+#[cfg_attr(docsrs, doc(cfg(feature = "default-client")))]
+pub fn initialise(client: ArcGISSharingClient) -> Arc<ArcGISSharingClient> {
+    STATIC_INSTANCE.swap(Arc::from(client))
+}
+
+#[cfg(feature = "default-client")]
+#[cfg_attr(docsrs, doc(cfg(feature = "default-client")))]
+pub fn instance() -> Arc<ArcGISSharingClient> {
+    STATIC_INSTANCE.load().clone()
+}
