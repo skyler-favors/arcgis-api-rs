@@ -228,7 +228,7 @@ fn duration_until(unix_ts: i64) -> Option<Duration> {
 #[derive(Clone)]
 pub struct ArcGISSharingClient {
     client: reqwest::Client,
-    pub portal: String,
+    pub portal: Url,
     auth_state: AuthState,
 }
 
@@ -247,7 +247,7 @@ impl Default for ArcGISSharingClient {
     fn default() -> ArcGISSharingClient {
         ArcGISSharingClient {
             client: reqwest::Client::new(),
-            portal: String::new(),
+            portal: Url::parse("https://arcgis.com").expect("Invalid portal URL"),
             auth_state: AuthState::None,
         }
     }
@@ -404,8 +404,7 @@ impl ArcGISSharingClient {
             // away from ArcGIS (via follow_location_to_data()), and we don't
             // want to give our credentials to third-party services.
 
-            // TODO: set this to the configured authority
-            if request.url().authority() == "<todo>" {
+            if &request.url().authority() == &self.portal.authority() {
                 auth_header.set_sensitive(true);
                 request
                     .headers_mut()
@@ -475,9 +474,13 @@ impl ArcGISSharingClientBuilder {
             },
         };
 
+        // TODO: verify portal is valid arcgis portal url
+        let portal =
+            Url::parse(&self.portal.expect("No portal provided")).expect("Invalid portal URL");
+
         ArcGISSharingClient {
             client: reqwest::Client::new(),
-            portal: self.portal.expect("No portal provided"),
+            portal,
             auth_state: auth,
         }
     }
