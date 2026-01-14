@@ -260,6 +260,34 @@ impl ArcGISSharingClient {
 }
 
 impl ArcGISSharingClient {
+    /// Send a `POST` request to `route` with an optional body, returning the body
+    /// of the response.
+    pub async fn post<P: Serialize + ?Sized, R: FromResponse>(
+        &self,
+        route: impl AsRef<str>,
+        body: Option<&P>,
+    ) -> Result<R> {
+        let response = self
+            ._post(self.parameterized_uri(route, None::<&()>)?, body)
+            .await?;
+        R::from_response(map_arcgis_error(response).await?).await
+    }
+
+    /// Send a `POST` request with no additional pre/post-processing.
+    pub async fn _post<P: Serialize + ?Sized>(
+        &self,
+        url: impl TryInto<Url>,
+        body: Option<&P>,
+    ) -> Result<reqwest::Response> {
+        let url = url
+            .try_into()
+            .map_err(|_| UriParseError {})
+            .context(UriParseSnafu)?;
+        let request = self.client.post(url);
+        let request = self.build_request(request, body)?;
+        self.execute(request).await
+    }
+
     /// Send a `GET` request to `route` with optional query parameters, returning
     /// the body of the response.
     pub async fn get<R, A, P>(&self, route: A, parameters: Option<&P>) -> Result<R>
