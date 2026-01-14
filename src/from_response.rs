@@ -1,8 +1,7 @@
-use crate::error::{Error, ReqwestSnafu, Result};
+use crate::error::{Error, Result};
 use async_trait::async_trait;
 use bytes::Bytes;
 use serde::de::DeserializeOwned;
-use snafu::ResultExt;
 
 #[async_trait]
 pub trait FromResponse: Sized {
@@ -23,4 +22,3 @@ impl<T: DeserializeOwned> FromResponse for T {
         })
     }
 }
-

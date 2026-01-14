@@ -5,5 +5,6 @@ use serde::Deserialize;
 pub struct TokenResponse {
     pub token: SecretString,
     pub expires: i64,
-    pub ssl: bool,
+    #[allow(dead_code)]
+    ssl: bool,
 }

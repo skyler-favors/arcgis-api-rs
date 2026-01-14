@@ -1,6 +1,3 @@
-use http::Extensions;
-use reqwest_middleware::reqwest::{Client, Request, Response};
-use reqwest_middleware::{ClientBuilder, Middleware, Next, Result};
 use secrecy::SecretString;
 
 /// State used to authenticate to ArcGIS
@@ -37,9 +34,11 @@ use secrecy::SecretString;
 //     LegacyToken(LegacyToken),
 // }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct OAuthUser;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct OAuthApp {
     client_id: SecretString,
@@ -47,28 +46,14 @@ pub struct OAuthApp {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct APIKey {
     key: SecretString,
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct LegacyToken {
     username: SecretString,
     password: SecretString,
-}
-
-#[derive(Debug)]
-pub struct AuthMiddleware;
-
-#[async_trait::async_trait]
-impl Middleware for AuthMiddleware {
-    async fn handle(
-        &self,
-        req: Request,
-        extensions: &mut Extensions,
-        next: Next<'_>,
-    ) -> Result<Response> {
-        let res = next.run(req, extensions).await;
-        res
-    }
 }
