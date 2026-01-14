@@ -49,3 +49,33 @@ async fn test_token() {
         .unwrap();
     println!("{:?}", response);
 }
+
+#[tokio::test]
+async fn create_group() {
+    Lazy::force(&SETUP);
+    let client = arcgis_sharing_rs::instance();
+
+    // create test group name
+    let uuid = uuid::Uuid::new_v4().to_string();
+    let title = format!("test-{}", uuid);
+
+    let create_result = client
+        .create_group()
+        .create(&title)
+        .tags(vec!["test", "dev"])
+        .send()
+        .await
+        .expect("Failed to send create group query");
+
+    let group = create_result.group;
+
+    assert!(&group.title == &title);
+
+    // let delete_result = group
+    //     .delete(&config.portal_root, &client, &group.id)
+    //     .await
+    //     .expect("Failed to delete group");
+    //
+    // assert!(delete_result.success);
+    // assert!(delete_result.group_id == group.id);
+}

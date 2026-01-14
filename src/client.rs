@@ -1,4 +1,5 @@
 use crate::{
+    api::CreateGroupHandler,
     error::{
         ArcgisError, HttpSnafu, ReqwestSnafu, SerdeUrlEncodedSnafu, UriParseError, UriParseSnafu,
         UrlParseSnafu,
@@ -265,10 +266,11 @@ impl ArcGISSharingClient {
     pub async fn post<P: Serialize + ?Sized, R: FromResponse>(
         &self,
         route: impl AsRef<str>,
+        parameters: Option<&P>,
         body: Option<&P>,
     ) -> Result<R> {
         let response = self
-            ._post(self.parameterized_uri(route, None::<&()>)?, body)
+            ._post(self.parameterized_uri(route, parameters)?, body)
             .await?;
         R::from_response(map_arcgis_error(response).await?).await
     }
@@ -375,8 +377,10 @@ impl ArcGISSharingClient {
         body: Option<&B>,
     ) -> Result<reqwest::Request> {
         if let Some(body) = body {
-            builder = builder.header(http::header::CONTENT_TYPE, "application/json");
-            let request = builder.json(body).build().context(ReqwestSnafu)?;
+            // not sure if this should be application/json or www-form-urlencoded
+            builder = builder.header(http::header::CONTENT_TYPE, "www-form-urlencoded");
+            let body = serde_urlencoded::to_string(body).context(SerdeUrlEncodedSnafu)?;
+            let request = builder.body(body).build().context(ReqwestSnafu)?;
             Ok(request)
         } else {
             Ok(builder
@@ -440,6 +444,9 @@ impl ArcGISSharingClient {
             }
         }
 
+        // append f=json to the url
+        request.url_mut().query_pairs_mut().append_pair("f", "json");
+
         // send request
         let response = self.client.execute(request).await.context(ReqwestSnafu)?;
 
@@ -456,9 +463,9 @@ impl ArcGISSharingClient {
 
 /// # ArcGIS Sharing API Methods
 impl ArcGISSharingClient {
-    // pub fn actions(&self) -> actions::ActionsHandler<'_> {
-    //     actions::ActionsHandler::new(self)
-    // }
+    pub fn create_group(&self) -> CreateGroupHandler<'_> {
+        CreateGroupHandler::new(self)
+    }
 }
 
 #[derive(Default)]
