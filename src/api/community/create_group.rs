@@ -20,11 +20,11 @@ impl<'a> CreateGroupHandler<'a> {
     }
 }
 
-#[derive(Default, Serialize)]
+#[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateGroupBuilder<'a, 'r> {
     #[serde(skip)]
-    handler: Option<&'r CreateGroupHandler<'a>>,
+    handler: &'r CreateGroupHandler<'a>,
 
     title: String,
 
@@ -89,9 +89,26 @@ pub struct CreateGroupBuilder<'a, 'r> {
 impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
     pub fn new(handler: &'r CreateGroupHandler<'a>, title: impl Into<String>) -> Self {
         Self {
-            handler: Some(handler),
+            handler,
             title: title.into(),
-            ..Default::default()
+            access: AccessLevel::default(),
+            description: None,
+            type_keywords: Vec::new(),
+            snippet: None,
+            tags: Vec::new(),
+            phone: None,
+            sort_field: None,
+            sort_order: None,
+            is_view_only: false,
+            is_invitation_only: false,
+            thumbnail: None,
+            capabilities: Vec::new(),
+            leaving_disallowed: false,
+            hidden_members: false,
+            membership_access: None,
+            auto_join: false,
+            privacy: None,
+            contribute: None,
         }
     }
 
@@ -186,14 +203,13 @@ impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
     }
 
     pub async fn send(&self) -> Result<CreateGroupResponse> {
-        let handler = self.handler.as_ref().unwrap();
-
-        let url = handler
+        let url = self
+            .handler
             .client
             .portal
             .join("sharing/rest/community/createGroup")
             .context(UrlParseSnafu)?;
 
-        handler.client.post(url, Some(&self), None).await
+        self.handler.client.post(url, Some(&self), None).await
     }
 }
