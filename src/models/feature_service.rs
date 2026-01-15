@@ -42,3 +42,20 @@ pub enum EsriType {
     EsriFieldTypeBigInteger,
     EsriFieldTypeSingle,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FeatureServiceQueryResponse {
+    #[serde(default)]
+    pub count: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub features: Option<Vec<EsriFeature>>,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct EsriFeature {
+    pub attributes: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub geometry: Option<serde_json::Value>,
+}

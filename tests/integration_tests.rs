@@ -44,7 +44,7 @@ async fn test_token() {
     let _response: TestResponse = client
         .get(
             format!("{}/sharing/rest/community/self", &client.portal),
-            Some(&[("f", "json")]),
+            None::<&()>,
         )
         .await
         .unwrap();
@@ -100,4 +100,20 @@ async fn test_public_feature_service() {
         .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
     let response = client.feature_service(fs_url).info().await.unwrap();
     assert!(response.r#type == "Feature Layer")
+}
+
+#[tokio::test]
+async fn test_feature_service_query() {
+    Lazy::force(&SETUP);
+    let client = arcgis_sharing_rs::instance();
+    let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+        .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+    let response = client
+        .feature_service(fs_url)
+        .query()
+        .set_count_only(true)
+        .send()
+        .await
+        .unwrap();
+    assert!(response.count > 0)
 }
