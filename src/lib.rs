@@ -8,7 +8,7 @@ mod auth;
 mod client;
 mod error;
 mod from_response;
-mod models;
+pub mod models;
 
 #[cfg(feature = "default-client")]
 static STATIC_INSTANCE: Lazy<arc_swap::ArcSwap<ArcGISSharingClient>> =

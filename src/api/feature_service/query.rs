@@ -120,18 +120,18 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
         self
     }
 
-    pub fn set_geometry_type(mut self, geometry_type: impl Into<String>) -> Self {
-        self.geometry_type = Some(geometry_type.into());
+    pub fn set_geometry_type(mut self, geometry_type: GeometryType) -> Self {
+        self.geometry_type = Some(geometry_type.to_esri_string());
         self
     }
 
-    pub fn set_spatial_rel(mut self, spatial_rel: impl Into<String>) -> Self {
-        self.spatial_rel = Some(spatial_rel.into());
+    pub fn set_spatial_relationship(mut self, spatial_rel: SpatialRelationship) -> Self {
+        self.spatial_rel = Some(spatial_rel.to_esri_string());
         self
     }
 
-    pub fn set_spatial_reference(mut self, sr: impl Into<String>) -> Self {
-        self.in_sr = Some(sr.into());
+    pub fn set_spatial_reference(mut self, sr: u32) -> Self {
+        self.in_sr = Some(sr.to_string());
         self
     }
 
