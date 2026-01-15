@@ -9,12 +9,12 @@ mod community_tests {
     use super::*;
 
     async fn create_group(client: &ArcGISSharingClient) -> String {
-        // create test group name
         let uuid = uuid::Uuid::new_v4().to_string();
         let title = format!("test-{}", uuid);
 
         let create_result = client
             .create_group()
+            // TODO: remove create and only use create_group
             .create(&title)
             .tags(vec!["test", "dev"])
             .send()
