@@ -134,6 +134,31 @@ impl ArcGISSharingClient {
         self.execute(request).await
     }
 
+    /// Send a `POST` request with multipart/form-data encoding
+    pub async fn post_multipart<R: FromResponse>(
+        &self,
+        route: impl AsRef<str>,
+        form: reqwest::multipart::Form,
+    ) -> Result<R> {
+        let url = self.parameterized_uri(route, None::<&()>)?;
+        let response = self._post_multipart(url, form).await?;
+        R::from_response(map_arcgis_error(response).await?).await
+    }
+
+    /// Send a `POST` request with multipart form data with no additional pre/post-processing.
+    async fn _post_multipart(
+        &self,
+        url: impl TryInto<Url>,
+        form: reqwest::multipart::Form,
+    ) -> Result<reqwest::Response> {
+        let url = url
+            .try_into()
+            .map_err(|_| UriParseError {})
+            .context(UriParseSnafu)?;
+        let request = self.client.post(url).multipart(form).build().context(ReqwestSnafu)?;
+        self.execute(request).await
+    }
+
     /// Send a `GET` request to `route` with optional query parameters, returning
     /// the body of the response.
     pub async fn get<R, A, P>(&self, route: A, parameters: Option<&P>) -> Result<R>

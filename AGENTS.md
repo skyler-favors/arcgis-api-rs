@@ -686,18 +686,18 @@ Always add integration tests:
 ```rust
 #[tokio::test]
 async fn test_my_new_endpoint() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    
-    let response = client
-        .my_handler()
-        .my_operation()
-        .set_param("value")
-        .send()
-        .await
-        .unwrap();
-    
-    assert!(response.is_valid());
+ Lazy::force(&SETUP);
+ let client = arcgis_sharing_rs::instance();
+ 
+ let response = client
+ .my_handler()
+ .my_operation()
+ .set_param("value")
+ .send()
+ .await
+ .unwrap();
+ 
+ assert!(response.is_valid());
 }
 ```
 
@@ -705,6 +705,30 @@ Run tests with:
 ```bash
 cargo test --test integration_tests test_my_new_endpoint
 ```
+
+### Testing Gotchas
+
+**Issue: Empty test output or silent failures**
+
+If `cargo test` returns exit code 0 but shows no output, the issue is likely a compilation error. Always run `cargo build --tests` or `cargo check --tests` first to see compilation errors:
+
+```bash
+# Check for compilation errors before running tests
+cargo build --tests 2>&1
+
+# Then run the actual test
+cargo test --test content_tests test_add_item -- --show-output
+```
+
+**Common compilation errors:**
+- Type inference with `Option`: If a method takes `Option<impl Into<String>>`, you must provide type hints:
+  ```rust
+  // WRONG - type inference fails
+  .content(None)
+  
+  // CORRECT - explicit type annotation
+  .content(None::<String>)
+  ```
 
 ## Summary
 
