@@ -40,7 +40,7 @@ struct TestResponse {
 async fn test_token() {
     Lazy::force(&SETUP);
     let client = arcgis_sharing_rs::instance();
-    let response: TestResponse = client
+    let _response: TestResponse = client
         .get(
             format!("{}/sharing/rest/community/self", &client.portal),
             Some(&[("f", "json")]),

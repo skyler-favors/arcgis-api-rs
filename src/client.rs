@@ -11,7 +11,7 @@ use std::{
     collections::HashMap,
     fmt,
     str::FromStr,
-    sync::RwLock,
+    sync::{Arc, RwLock},
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
@@ -139,13 +139,27 @@ impl Default for CachedToken {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum AuthState {
     None,
     LegacyToken {
         auth: LegacyToken,
         token: CachedToken,
+        refresh_mutex: Arc<tokio::sync::Mutex<()>>,
     },
+}
+
+impl fmt::Debug for AuthState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AuthState::None => write!(f, "None"),
+            AuthState::LegacyToken { auth, token, .. } => f
+                .debug_struct("LegacyToken")
+                .field("auth", auth)
+                .field("token", token)
+                .finish(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -392,17 +406,14 @@ impl ArcGISSharingClient {
     }
 
     async fn refresh_token_legacy_token(&self) -> Result<SecretString> {
-        let (auth, cached_token) = if let AuthState::LegacyToken {
-            ref auth,
-            ref token,
-        } = self.auth_state
-        {
-            (auth, token)
-        } else {
-            return Err(Error::LegacyAuth {
-                backtrace: Backtrace::capture(),
-            });
-        };
+        let (auth, cached_token) =
+            if let AuthState::LegacyToken { auth, token, .. } = &self.auth_state {
+                (auth, token)
+            } else {
+                return Err(Error::LegacyAuth {
+                    backtrace: Backtrace::capture(),
+                });
+            };
 
         let (token, _ttl) = auth.fetch_token(self.portal.as_str(), &self.client).await?;
 
@@ -415,11 +426,25 @@ impl ArcGISSharingClient {
     pub async fn execute(&self, mut request: reqwest::Request) -> Result<reqwest::Response> {
         let auth_header: Option<HeaderValue> = match self.auth_state {
             AuthState::None => None,
-            AuthState::LegacyToken { ref token, .. } => {
+            AuthState::LegacyToken {
+                ref token,
+                ref refresh_mutex,
+                ..
+            } => {
+                // Fast path: check if we have a valid token
                 let token = if let Some(token) = token.valid_token() {
                     token
                 } else {
-                    self.refresh_token_legacy_token().await?
+                    // Acquire mutex to ensure only one task refreshes at a time
+                    let _guard = refresh_mutex.lock().await;
+
+                    // Double-check: another task might have refreshed while we waited
+                    if let Some(token) = token.valid_token() {
+                        token
+                    } else {
+                        // Still need to refresh
+                        self.refresh_token_legacy_token().await?
+                    }
                 };
                 let mut header =
                     HeaderValue::from_str(format!("Bearer {}", token.expose_secret()).as_str())
@@ -452,7 +477,7 @@ impl ArcGISSharingClient {
 
         let status = response.status();
         if StatusCode::UNAUTHORIZED == status {
-            if let AuthState::LegacyToken { ref token, .. } = self.auth_state {
+            if let AuthState::LegacyToken { token, .. } = &self.auth_state {
                 token.clear();
             }
         }
@@ -510,6 +535,7 @@ impl ArcGISSharingClientBuilder {
             Auth::LegacyToken(auth) => AuthState::LegacyToken {
                 auth: auth.clone(),
                 token: CachedToken::default(),
+                refresh_mutex: Arc::new(tokio::sync::Mutex::new(())),
             },
         };
 
