@@ -196,3 +196,27 @@ impl QueryGeometry {
         }
     }
 }
+
+/// Response from applyEdits operation
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyEditsResponse {
+    pub add_results: Vec<ApplyEditsResult>,
+    pub update_results: Vec<ApplyEditsResult>,
+    pub delete_results: Vec<ApplyEditsResult>,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}
+
+/// Individual result from an add, update, or delete operation
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ApplyEditsResult {
+    pub success: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub global_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub object_id: Option<i64>,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}

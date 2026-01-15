@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn query_with_polygon_geometry() {
+    async fn test_feature_service_query_polygon_geometry() {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
@@ -182,5 +182,31 @@ mod tests {
             .unwrap();
 
         assert!(response.count == 2)
+    }
+
+    #[tokio::test]
+    async fn test_feature_service_apply_edits_update() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+            .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+
+        let updates = vec![
+            serde_json::json!({"attributes": {"objectid": 1, "make": "Honda"}}),
+            serde_json::json!({"attributes": {"objectid": 2, "make": "Honda"}}),
+        ];
+
+        let response = client
+            .feature_service(fs_url)
+            .apply_edits()
+            .set_updates(updates)
+            .send()
+            .await
+            .unwrap();
+
+        response
+            .update_results
+            .iter()
+            .for_each(|edit| assert!(edit.success))
     }
 }
