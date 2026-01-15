@@ -83,11 +83,21 @@ async fn test_group_lifecycle() {
 }
 
 #[tokio::test]
-async fn test_feature_service() {
+async fn test_private_feature_service() {
     Lazy::force(&SETUP);
     let client = arcgis_sharing_rs::instance();
-    let fs_url = std::env::var("TEST_FEATURE_SERVICE")
-        .expect("Failed to find env variable 'TEST_FEATURE_SERVICE'");
+    let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+        .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+    let response = client.feature_service(fs_url).info().await.unwrap();
+    assert!(response.r#type == "Feature Layer")
+}
 
-    //assert!(fs.metadata.r#type == "Feature Layer")
+#[tokio::test]
+async fn test_public_feature_service() {
+    Lazy::force(&SETUP);
+    let client = arcgis_sharing_rs::instance();
+    let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
+        .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
+    let response = client.feature_service(fs_url).info().await.unwrap();
+    assert!(response.r#type == "Feature Layer")
 }

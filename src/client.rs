@@ -1,5 +1,5 @@
 use crate::{
-    api::{CreateGroupHandler, GroupsHandler},
+    api::{CreateGroupHandler, FeatureServiceHandler, GroupsHandler},
     error::{
         ArcgisError, HttpSnafu, ReqwestSnafu, SerdeUrlEncodedSnafu, UriParseError, UriParseSnafu,
         UrlParseSnafu,
@@ -202,14 +202,7 @@ impl LegacyToken {
             .await
             .context(ReqwestSnafu)?; // TODO: this should be JSONSnafu
 
-        let ttl = duration_until(response.expires).unwrap_or_else(|| {
-            // TODO: tracing should be a feature
-            // tracing::error!(
-            //     expires_timestamp = response.expires,
-            //     "Failed to calculate token TTL, using default 60 seconds"
-            // );
-            Duration::from_secs(60)
-        });
+        let ttl = duration_until(response.expires).unwrap_or_else(|| Duration::from_secs(60));
 
         Ok((response.token, ttl))
     }
@@ -494,6 +487,10 @@ impl ArcGISSharingClient {
 
     pub fn groups(&self, id: impl Into<String>) -> GroupsHandler<'_> {
         GroupsHandler::new(self, id.into())
+    }
+
+    pub fn feature_service(&self, url: impl Into<String>) -> FeatureServiceHandler<'_> {
+        FeatureServiceHandler::new(self, url.into())
     }
 }
 
