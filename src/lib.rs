@@ -384,4 +384,42 @@ impl ArcGISSharingClient {
     pub fn feature_service(&self, url: impl Into<String>) -> FeatureServiceHandler<'_> {
         FeatureServiceHandler::new(self, url.into())
     }
+
+    pub fn content(&self, username: Option<impl Into<String>>) -> ContentHandler<'_> {
+        // if username is provided, use it;
+        // otherwise, use the username from the auth state
+        let username = match username {
+            Some(username) => Some(username.into()),
+            None => match self.auth_state {
+                AuthState::LegacyToken { ref auth, .. } => {
+                    Some(auth.username.expose_secret().to_string())
+                }
+                _ => None,
+            },
+        }
+        .expect("No username provided");
+
+        ContentHandler::new(self, username)
+    }
+
+    pub fn item(
+        &self,
+        username: Option<impl Into<String>>,
+        id: impl Into<String>,
+    ) -> ItemHandler<'_> {
+        // if username is provided, use it;
+        // otherwise, use the username from the auth state
+        let username = match username {
+            Some(username) => Some(username.into()),
+            None => match self.auth_state {
+                AuthState::LegacyToken { ref auth, .. } => {
+                    Some(auth.username.expose_secret().to_string())
+                }
+                _ => None,
+            },
+        }
+        .expect("No username provided");
+
+        ItemHandler::new(self, username, id.into())
+    }
 }

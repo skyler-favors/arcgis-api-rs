@@ -151,7 +151,7 @@ pub enum Auth {
 
 #[derive(Debug, Clone)]
 pub struct LegacyToken {
-    username: SecretString,
+    pub username: SecretString,
     password: SecretString,
     referer: String,
     expiration: String,
