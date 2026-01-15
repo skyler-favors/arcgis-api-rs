@@ -37,83 +37,88 @@ struct TestResponse {
     extra_fields: std::collections::HashMap<String, serde_json::Value>,
 }
 
-#[tokio::test]
-async fn test_token() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    let _response: TestResponse = client
-        .get(
-            format!("{}/sharing/rest/community/self", &client.portal),
-            None::<&()>,
-        )
-        .await
-        .unwrap();
-}
+#[serial_test::serial]
+mod tests {
+    use super::*;
 
-async fn create_group(client: &ArcGISSharingClient) -> String {
-    // create test group name
-    let uuid = uuid::Uuid::new_v4().to_string();
-    let title = format!("test-{}", uuid);
+    #[tokio::test]
+    async fn test_token() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let _response: TestResponse = client
+            .get(
+                format!("{}/sharing/rest/community/self", &client.portal),
+                None::<&()>,
+            )
+            .await
+            .unwrap();
+    }
 
-    let create_result = client
-        .create_group()
-        .create(&title)
-        .tags(vec!["test", "dev"])
-        .send()
-        .await
-        .expect("Failed to send create group query");
+    async fn create_group(client: &ArcGISSharingClient) -> String {
+        // create test group name
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let title = format!("test-{}", uuid);
 
-    let group = create_result.group;
-    assert!(&group.title == &title);
-    return group.id;
-}
+        let create_result = client
+            .create_group()
+            .create(&title)
+            .tags(vec!["test", "dev"])
+            .send()
+            .await
+            .expect("Failed to send create group query");
 
-async fn delete_group(client: &ArcGISSharingClient, group_id: &str) {
-    let delete_result = client.groups(group_id).delete().send().await.unwrap();
-    assert!(delete_result.success);
-    assert!(delete_result.group_id == group_id);
-}
+        let group = create_result.group;
+        assert!(&group.title == &title);
+        return group.id;
+    }
 
-#[tokio::test]
-async fn test_group_lifecycle() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    let group_id = create_group(&client).await;
-    delete_group(&client, &group_id).await;
-}
+    async fn delete_group(client: &ArcGISSharingClient, group_id: &str) {
+        let delete_result = client.groups(group_id).delete().send().await.unwrap();
+        assert!(delete_result.success);
+        assert!(delete_result.group_id == group_id);
+    }
 
-#[tokio::test]
-async fn test_private_feature_service() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
-        .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
-    let response = client.feature_service(fs_url).info().await.unwrap();
-    assert!(response.r#type == "Feature Layer")
-}
+    #[tokio::test]
+    async fn test_group_lifecycle() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let group_id = create_group(&client).await;
+        delete_group(&client, &group_id).await;
+    }
 
-#[tokio::test]
-async fn test_public_feature_service() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
-        .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
-    let response = client.feature_service(fs_url).info().await.unwrap();
-    assert!(response.r#type == "Feature Layer")
-}
+    #[tokio::test]
+    async fn test_private_feature_service() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+            .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+        let response = client.feature_service(fs_url).info().await.unwrap();
+        assert!(response.r#type == "Feature Layer")
+    }
 
-#[tokio::test]
-async fn test_feature_service_query() {
-    Lazy::force(&SETUP);
-    let client = arcgis_sharing_rs::instance();
-    let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
-        .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
-    let response = client
-        .feature_service(fs_url)
-        .query()
-        .set_count_only(true)
-        .send()
-        .await
-        .unwrap();
-    assert!(response.count > 0)
+    #[tokio::test]
+    async fn test_public_feature_service() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
+            .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
+        let response = client.feature_service(fs_url).info().await.unwrap();
+        assert!(response.r#type == "Feature Layer")
+    }
+
+    #[tokio::test]
+    async fn test_feature_service_query() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+            .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+        let response = client
+            .feature_service(fs_url)
+            .query()
+            .set_count_only(true)
+            .send()
+            .await
+            .unwrap();
+        assert!(response.count > 0)
+    }
 }
