@@ -64,7 +64,7 @@ pub struct FeatureServiceQueryBuilder<'a, 'r> {
 impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
     pub fn new(handler: &'r FeatureServiceHandler<'a>) -> Self {
         Self {
-            handler: handler,
+            handler,
             return_count_only: Some(false),
             result_offset: Some(0),
             out_fields: Some("*".to_string()),

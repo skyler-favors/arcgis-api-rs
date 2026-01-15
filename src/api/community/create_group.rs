@@ -1,6 +1,7 @@
+use crate::api::serialize_comma_separated;
 use crate::error::{Result, UrlParseSnafu};
 use crate::models::*;
-use crate::{serialize_comma_separated, ArcGISSharingClient};
+use crate::ArcGISSharingClient;
 use serde::Serialize;
 use snafu::ResultExt;
 
@@ -152,12 +153,12 @@ impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
         self
     }
 
-    pub fn is_view_only(mut self, val: bool) -> Self {
+    pub fn set_is_view_only(mut self, val: bool) -> Self {
         self.is_view_only = val;
         self
     }
 
-    pub fn is_invitation_only(mut self, val: bool) -> Self {
+    pub fn set_is_invitation_only(mut self, val: bool) -> Self {
         self.is_invitation_only = val;
         self
     }

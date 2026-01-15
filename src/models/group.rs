@@ -58,18 +58,13 @@ pub struct DisplaySettings {
     pub item_types: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum AccessLevel {
+    #[default]
     Private,
     Org,
     Public,
-}
-
-impl Default for AccessLevel {
-    fn default() -> Self {
-        AccessLevel::Private
-    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
