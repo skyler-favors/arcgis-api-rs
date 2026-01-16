@@ -7,7 +7,7 @@ use std::task::{Context, Poll};
 
 use crate::{
     error::{Result, UrlParseSnafu},
-    models::{SearchResponse, SearchResult},
+    models::{Item, SearchResponse},
     ArcGISSharingClient,
 };
 
@@ -250,7 +250,7 @@ pub struct SearchBuilder<'a> {
 pub struct SearchStream<'a> {
     client: &'a ArcGISSharingClient,
     params: SearchParams,
-    buffer: VecDeque<SearchResult>,
+    buffer: VecDeque<Item>,
     current_start: i64,
     next_start: i64,
     pages_fetched: usize,
@@ -356,7 +356,7 @@ impl<'a> SearchStream<'a> {
 }
 
 impl<'a> Stream for SearchStream<'a> {
-    type Item = SearchResult;
+    type Item = Item;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.get_mut();

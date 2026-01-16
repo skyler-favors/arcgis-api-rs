@@ -14,7 +14,7 @@ pub struct SearchResponse {
     #[serde(default = "default_next_start")]
     pub next_start: i64,
     #[serde(default)]
-    pub results: Vec<SearchResult>,
+    pub results: Vec<Item>,
 }
 
 fn default_next_start() -> i64 {
@@ -23,7 +23,7 @@ fn default_next_start() -> i64 {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SearchResult {
+pub struct Item {
     pub id: String,
     pub owner: String,
     #[serde(default)]
