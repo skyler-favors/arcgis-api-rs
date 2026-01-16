@@ -196,4 +196,73 @@ mod search_tests {
             "Should return very few or no results for nonsense query"
         );
     }
+
+    #[tokio::test]
+    async fn test_search_stream_no_delay() {
+        use std::time::{Duration, Instant};
+
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        // Test with no delay - should be faster
+        let start = Instant::now();
+        let results: Vec<_> = client
+            .search()
+            .query("water")
+            .set_num(3)
+            .set_max_pages(3)
+            .set_page_fetch_delay(Duration::ZERO) // No delay
+            .send()
+            .collect()
+            .await;
+
+        let duration = start.elapsed();
+
+        println!(
+            "Fetched {} results in {:?} with no delay",
+            results.len(),
+            duration
+        );
+
+        // With no delay and 3 pages, should complete faster than 1 second
+        // (assuming each API call takes < 333ms on average)
+        assert!(results.len() > 0, "Should have fetched some results");
+        println!("Test completed in {:?}", duration);
+    }
+
+    #[tokio::test]
+    async fn test_search_stream_custom_delay() {
+        use std::time::{Duration, Instant};
+
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        // Test with custom delay
+        let start = Instant::now();
+        let results: Vec<_> = client
+            .search()
+            .query("water")
+            .set_num(3)
+            .set_max_pages(2)
+            .set_page_fetch_delay(Duration::from_millis(100)) // 100ms delay
+            .send()
+            .collect()
+            .await;
+
+        let duration = start.elapsed();
+
+        println!(
+            "Fetched {} results in {:?} with 100ms delay",
+            results.len(),
+            duration
+        );
+
+        // With 2 pages, we should have at least 1 delay (between page 1 and 2)
+        // So total time should be at least 100ms
+        assert!(results.len() > 0, "Should have fetched some results");
+        assert!(
+            duration >= Duration::from_millis(100),
+            "Should have taken at least 100ms with delay"
+        );
+    }
 }

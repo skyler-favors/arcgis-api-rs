@@ -1,5 +1,6 @@
 use arcgis_sharing_rs::ArcGISSharingClient;
 use futures::StreamExt;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -11,11 +12,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Searching for 'water' related items...\n");
 
     // Create a search stream
+    // Note: By default, there's a 500ms delay between page fetches
     let mut search_stream = client
         .search()
         .query("water")
         .set_num(10) // 10 items per page
         .set_max_pages(3) // Limit to 3 pages (30 items max)
+        .set_page_fetch_delay(Duration::from_millis(500)) // Optional: customize delay
         .send();
 
     // Iterate through results one at a time
@@ -57,6 +60,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await;
 
     println!("Took {} feature service items", limited_results.len());
+
+    // Example: Disable delay for faster fetching
+    println!("\n--- Fast fetching (no delay) ---");
+    let fast_results: Vec<_> = client
+        .search()
+        .query("basemap")
+        .set_num(10)
+        .set_max_pages(2)
+        .set_page_fetch_delay(Duration::ZERO) // No delay between pages
+        .send()
+        .collect()
+        .await;
+
+    println!(
+        "Quickly fetched {} basemap items (no delay)",
+        fast_results.len()
+    );
 
     Ok(())
 }

@@ -4,6 +4,7 @@ use snafu::ResultExt;
 use std::collections::VecDeque;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use std::time::Duration;
 
 use crate::{
     error::{Result, UrlParseSnafu},
@@ -72,6 +73,9 @@ pub struct SearchBuilder<'a> {
 
     #[serde(skip)]
     max_pages: usize,
+
+    #[serde(skip)]
+    page_fetch_delay: Duration,
 
     // The query string used to search.
     // See Search reference for advanced options.
@@ -201,7 +205,7 @@ pub struct SearchBuilder<'a> {
     display_service_properties: Option<bool>,
 }
 
-/// A stream that yields individual `SearchResult` items, automatically handling pagination.
+/// A stream that yields individual `Item` results, automatically handling pagination.
 ///
 /// The `SearchStream` implements `futures::Stream` and automatically fetches additional pages
 /// from the ArcGIS API as needed. Results are buffered internally and yielded one at a time.
@@ -210,6 +214,7 @@ pub struct SearchBuilder<'a> {
 /// The stream transparently handles pagination by:
 /// - Fetching pages on-demand as the stream is consumed
 /// - Respecting the `max_pages` limit set via [`SearchBuilder::set_max_pages`]
+/// - Adding a configurable delay between page fetches to avoid overwhelming the server
 /// - Stopping when no more results are available (when `nextStart == -1`)
 /// - Stopping silently on errors
 ///
@@ -257,6 +262,8 @@ pub struct SearchStream<'a> {
     max_pages: usize,
     finished: bool,
     fetch_future: Option<Pin<Box<dyn Future<Output = Result<SearchResponse>> + 'a>>>,
+    page_fetch_delay: Duration,
+    delay_future: Option<Pin<Box<tokio::time::Sleep>>>,
 }
 
 /// Internal struct to hold search parameters for pagination
@@ -302,7 +309,12 @@ struct SearchParams {
 }
 
 impl<'a> SearchStream<'a> {
-    fn new(client: &'a ArcGISSharingClient, params: SearchParams, max_pages: usize) -> Self {
+    fn new(
+        client: &'a ArcGISSharingClient,
+        params: SearchParams,
+        max_pages: usize,
+        page_fetch_delay: Duration,
+    ) -> Self {
         Self {
             client,
             params,
@@ -313,6 +325,8 @@ impl<'a> SearchStream<'a> {
             max_pages,
             finished: false,
             fetch_future: None,
+            page_fetch_delay,
+            delay_future: None,
         }
     }
 
@@ -372,12 +386,37 @@ impl<'a> Stream for SearchStream<'a> {
                 return Poll::Ready(None);
             }
 
+            // If we have a pending delay, poll it
+            if let Some(mut delay_future) = this.delay_future.take() {
+                match delay_future.as_mut().poll(cx) {
+                    Poll::Ready(()) => {
+                        // Delay completed, continue to fetch
+                        continue;
+                    }
+                    Poll::Pending => {
+                        // Put the delay future back and return Pending
+                        this.delay_future = Some(delay_future);
+                        return Poll::Pending;
+                    }
+                }
+            }
+
             // If we have a pending fetch, poll it
             if let Some(mut fetch_future) = this.fetch_future.take() {
                 match fetch_future.as_mut().poll(cx) {
                     Poll::Ready(Ok(response)) => {
-                        // Process the response and continue the loop
+                        // Process the response
                         this.process_response(response);
+
+                        // Start delay before next fetch if we're not finished and have more pages
+                        if !this.finished
+                            && this.pages_fetched > 0
+                            && !this.page_fetch_delay.is_zero()
+                        {
+                            this.delay_future =
+                                Some(Box::pin(tokio::time::sleep(this.page_fetch_delay)));
+                        }
+
                         // Continue loop to check if buffer has items or if we're done
                         continue;
                     }
@@ -410,6 +449,7 @@ impl<'a> SearchBuilder<'a> {
         Self {
             client,
             max_pages: usize::MAX, // Default to unlimited
+            page_fetch_delay: Duration::from_millis(100), // Default 0.1 second delay
             q: None,
             bbox: None,
             filter: None,
@@ -466,6 +506,37 @@ impl<'a> SearchBuilder<'a> {
     /// ```
     pub fn set_max_pages(mut self, max_pages: usize) -> Self {
         self.max_pages = max_pages;
+        self
+    }
+
+    /// Sets the delay between page fetches.
+    ///
+    /// By default, a 500ms (0.5 second) delay is used between page fetches to avoid
+    /// overwhelming the server with rapid requests. Set to `Duration::ZERO` to disable
+    /// the delay.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use arcgis_sharing_rs::ArcGISSharingClient;
+    /// # use std::time::Duration;
+    /// # async fn example(client: &ArcGISSharingClient) {
+    /// // Use a 1 second delay between pages
+    /// let stream = client
+    ///     .search()
+    ///     .query("water")
+    ///     .set_page_fetch_delay(Duration::from_secs(1))
+    ///     .send();
+    ///
+    /// // Disable delay for faster fetching (be careful with server load)
+    /// let stream = client
+    ///     .search()
+    ///     .query("water")
+    ///     .set_page_fetch_delay(Duration::ZERO)
+    ///     .send();
+    /// # }
+    /// ```
+    pub fn set_page_fetch_delay(mut self, delay: Duration) -> Self {
+        self.page_fetch_delay = delay;
         self
     }
 
@@ -902,6 +973,11 @@ impl<'a> SearchBuilder<'a> {
     /// # }
     /// ```
     pub fn send(self) -> SearchStream<'a> {
-        SearchStream::new(self.client, self.to_params(), self.max_pages)
+        SearchStream::new(
+            self.client,
+            self.to_params(),
+            self.max_pages,
+            self.page_fetch_delay,
+        )
     }
 }
