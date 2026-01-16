@@ -1,8 +1,12 @@
 mod publish;
 mod update;
 
+use snafu::ResultExt;
+
 use crate::{
     api::item::{publish::PublishItemBuilder, update::UpdateItemBuilder},
+    error::{Result, UrlParseSnafu},
+    models::{Item, ItemInfoResult},
     ArcGISSharingClient,
 };
 
@@ -19,6 +23,20 @@ impl<'a> ItemHandler<'a> {
             username,
             id,
         }
+    }
+
+    pub async fn info(&self) -> Result<Item> {
+        let url = self
+            .client
+            .portal
+            .join(&format!(
+                "sharing/rest/content/users/{}/items/{}",
+                self.username, self.id
+            ))
+            .context(UrlParseSnafu)?;
+
+        let response: ItemInfoResult = self.client.get(url, None::<&()>).await?;
+        Ok(response.item)
     }
 
     pub fn update(&self) -> UpdateItemBuilder<'_, '_> {

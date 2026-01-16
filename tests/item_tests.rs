@@ -8,6 +8,16 @@ mod item_tests {
     use super::*;
 
     #[tokio::test]
+    async fn test_get_item_info() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+        let item = client.item(None::<String>, &item_id).info().await.unwrap();
+        assert_eq!(item.id, item_id);
+        assert_eq!(item.title, "Cars");
+    }
+
+    #[tokio::test]
     async fn test_publish_csv_item_parameters() {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
