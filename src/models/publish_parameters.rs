@@ -122,7 +122,7 @@ pub struct LayerInfo {
     pub copyright_text: String,
     pub current_version: f64,
     pub default_visibility: bool,
-    pub drawing_info: DrawingInfo,
+    pub drawing_info: FeatureLayerDrawingInfo,
     pub edit_fields_info: Value,
     #[serde(rename = "enableZDefaults")]
     pub enable_zdefaults: bool,
@@ -167,26 +167,26 @@ pub struct AdvancedQueryCapabilities {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DrawingInfo {
-    pub renderer: Renderer,
+pub struct FeatureLayerDrawingInfo {
+    pub renderer: FeatureLayerRenderer,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Renderer {
+pub struct FeatureLayerRenderer {
     pub description: String,
     pub label: String,
-    pub symbol: Symbol,
+    pub symbol: FeatureLayerSymbol,
     #[serde(rename = "type")]
     pub type_field: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symbol {
+pub struct FeatureLayerSymbol {
     pub angle: i64,
     pub color: Vec<i64>,
-    pub outline: Outline,
+    pub outline: FeatureLayerOutline,
     pub size: i64,
     pub style: String,
     #[serde(rename = "type")]
@@ -197,7 +197,7 @@ pub struct Symbol {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Outline {
+pub struct FeatureLayerOutline {
     pub color: Vec<i64>,
     pub width: i64,
 }
@@ -609,10 +609,10 @@ impl CSVPublishParameterBuilder {
                 supports_query_with_distance: true,
             },
             geometry_type: "esriGeometryPoint".to_string(),
-            drawing_info: DrawingInfo {
-                renderer: Renderer {
+            drawing_info: FeatureLayerDrawingInfo {
+                renderer: FeatureLayerRenderer {
                     type_field: "simple".to_string(),
-                    symbol: Symbol {
+                    symbol: FeatureLayerSymbol {
                         type_field: "esriSMS".to_string(),
                         style: "esriSMSCircle".to_string(),
                         color: vec![129, 140, 0, 255],
@@ -620,7 +620,7 @@ impl CSVPublishParameterBuilder {
                         angle: 0,
                         xoffset: 0,
                         yoffset: 0,
-                        outline: Outline {
+                        outline: FeatureLayerOutline {
                             color: vec![0, 0, 0, 255],
                             width: 1,
                         },

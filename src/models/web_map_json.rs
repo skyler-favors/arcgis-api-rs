@@ -40,22 +40,22 @@ pub struct OperationalLayer {
 #[serde(rename_all = "camelCase")]
 pub struct LayerDefinition {
     pub feature_reduction: Value,
-    pub drawing_info: DrawingInfo,
+    pub drawing_info: WebMapDrawingInfo,
     pub definition_expression: Value,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DrawingInfo {
-    pub renderer: Renderer,
+pub struct WebMapDrawingInfo {
+    pub renderer: WebMapRenderer,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Renderer {
+pub struct WebMapRenderer {
     #[serde(rename = "type")]
     pub type_field: String,
-    pub symbol: Option<Symbol>,
+    pub symbol: Option<WebMapSymbol>,
     pub authoring_info: Option<AuthoringInfo>,
     #[serde(default)]
     pub class_break_infos: Vec<ClassBreakInfo>,
@@ -67,13 +67,13 @@ pub struct Renderer {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symbol {
+pub struct WebMapSymbol {
     #[serde(rename = "type")]
     pub type_field: String,
     pub color: Option<Vec<i64>>,
     pub outline: Option<Outline>,
     pub style: Option<String>,
-    pub symbol: Option<Symbol2>,
+    pub symbol: Option<WebMapSymbol2>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -88,7 +88,7 @@ pub struct Outline {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symbol2 {
+pub struct WebMapSymbol2 {
     #[serde(rename = "type")]
     pub type_field: String,
     pub symbol_layers: Vec<SymbolLayer>,
@@ -137,13 +137,13 @@ pub struct VisualVariable {
 #[serde(rename_all = "camelCase")]
 pub struct ClassBreakInfo {
     pub class_max_value: i64,
-    pub symbol: Symbol3,
+    pub symbol: WebMapSymbol3,
     pub label: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Symbol3 {
+pub struct WebMapSymbol3 {
     #[serde(rename = "type")]
     pub type_field: String,
     pub color: Vec<i64>,
@@ -403,7 +403,7 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Value::Null,
-                drawing_info: DrawingInfo::default(),
+                drawing_info: WebMapDrawingInfo::default(),
                 definition_expression: Value::Null,
             }),
             popup_info: None,
@@ -458,7 +458,7 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Value::Null,
-                drawing_info: DrawingInfo::default(),
+                drawing_info: WebMapDrawingInfo::default(),
                 definition_expression: Value::Null,
             }),
             popup_info: None,
