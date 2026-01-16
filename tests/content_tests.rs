@@ -8,7 +8,7 @@ mod content_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_add_item() {
+    async fn test_add_csv_item() {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
@@ -27,6 +27,39 @@ mod content_tests {
             .file(test_csv)
             .set_type("CSV")
             .title(title)
+            .send()
+            .await
+            .unwrap();
+
+        assert!(response.success);
+    }
+
+    #[tokio::test]
+    async fn test_add_webmap_item() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let web_map_name = format!("TestWebMap_{}", uuid.replace("-", "_"));
+
+        let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
+            .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+
+        // Build web map using the builder pattern
+        let web_map = arcgis_sharing_rs::models::WebMapBuilder::new()
+            .add_feature_layer(&fs_url, "cars")
+            .with_popup("Feature Information {objectid}")
+            .add_popup_field("objectid", "OBJECTID", false, true)
+            .add_popup_field("make", "Make", false, true)
+            // .add_popup_field_with_format("latitude", "Latitude", true, true, 2)
+            // .add_popup_field_with_format("longitude", "Longitude", true, true, 2)
+            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic)
+            .build();
+
+        let response = client
+            .content(None::<String>)
+            .add_item()
+            .web_map(web_map_name, web_map)
             .send()
             .await
             .unwrap();

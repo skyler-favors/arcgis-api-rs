@@ -156,10 +156,8 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
 #### ✅ DO
 
 - **Use direct references** - `handler: &'r Handler<'a>`, not `Option<&'r Handler<'a>>`
-- **No `Default` derive** - Explicitly initialize all fields in `new()`
 - **Use `#[serde(skip)]`** - Always skip the handler field
 - **Chain-friendly setters** - Consume `self` and return `Self`
-- **Sensible defaults** - Initialize fields in `new()` with appropriate defaults
 - **Use `impl Into<T>`** - For string and convertible parameters
 - **Skip serialization** - Use `skip_serializing_if` for `Option` and empty `Vec`
 
@@ -168,7 +166,6 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
 - **Don't wrap handler in `Option`** - It's always required
 - **Don't use `.as_ref().unwrap()`** - This indicates you're using `Option` unnecessarily
 - **Don't create separate query structs** - The builder itself can execute the request
-- **Don't use `..Default::default()`** - Explicitly list all fields for clarity
 - **Don't add a `build()` method** - Just use `send()` directly
 
 ### Method Naming Conventions

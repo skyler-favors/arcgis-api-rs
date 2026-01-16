@@ -405,6 +405,14 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
         self
     }
 
+    /// Helper method for adding a web map item
+    pub fn web_map(mut self, title: impl Into<String>, builder: WebMapJson) -> Self {
+        self = self.title(title);
+        self = self.set_type("Web Map");
+        self = self.text(serde_json::to_string(&builder).unwrap());
+        self
+    }
+
     /// Returns true if multipart encoding is needed (when file content is present)
     fn needs_multipart(&self) -> bool {
         self.file.is_some()
@@ -417,8 +425,8 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
 
         // Serialize all fields (except handler which has #[serde(skip)])
         // The file field will be serialized as a string, which we'll exclude below
-        let serialized = serde_urlencoded::to_string(self)
-            .context(crate::error::SerdeUrlEncodedSnafu)?;
+        let serialized =
+            serde_urlencoded::to_string(self).context(crate::error::SerdeUrlEncodedSnafu)?;
 
         // Parse back as key-value pairs and add each as text to the form
         for (key, value) in form_urlencoded::parse(serialized.as_bytes()) {
