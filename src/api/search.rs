@@ -261,7 +261,7 @@ pub struct SearchStream<'a> {
     pages_fetched: usize,
     max_pages: usize,
     finished: bool,
-    fetch_future: Option<Pin<Box<dyn Future<Output = Result<SearchResponse>> + 'a>>>,
+    fetch_future: Option<Pin<Box<dyn Future<Output = Result<SearchResponse>> + Send + 'a>>>,
     page_fetch_delay: Duration,
     delay_future: Option<Pin<Box<tokio::time::Sleep>>>,
 }
