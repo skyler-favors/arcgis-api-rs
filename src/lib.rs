@@ -453,4 +453,8 @@ impl ArcGISSharingClient {
 
         ItemHandler::new(self, username, id.into())
     }
+
+    pub fn search(&self) -> SearchBuilder<'_> {
+        SearchBuilder::new(self)
+    }
 }

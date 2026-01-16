@@ -2,11 +2,13 @@ mod community;
 mod content;
 mod feature_service;
 mod item;
+mod search;
 
 pub use community::*;
 pub use content::*;
 pub use feature_service::*;
 pub use item::*;
+pub use search::*;
 
 /// Serializes a Vec<String> or Vec<T: Display> as a single comma-separated string.
 fn serialize_comma_separated<S, T>(vec: &[T], s: S) -> Result<S::Ok, S::Error>
