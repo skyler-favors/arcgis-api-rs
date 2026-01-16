@@ -155,7 +155,12 @@ impl ArcGISSharingClient {
             .try_into()
             .map_err(|_| UriParseError {})
             .context(UriParseSnafu)?;
-        let request = self.client.post(url).multipart(form).build().context(ReqwestSnafu)?;
+        let request = self
+            .client
+            .post(url)
+            .multipart(form)
+            .build()
+            .context(ReqwestSnafu)?;
         self.execute(request).await
     }
 
