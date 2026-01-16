@@ -33,6 +33,12 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         }
     }
 
+    pub fn csv_with_parameters(mut self, builder: CSVPublishParameterBuilder) -> Self {
+        self.filetype = "csv".to_string();
+        self.publish_parameters = serde_json::to_string(&builder.build()).unwrap();
+        self
+    }
+
     /// Set the file type being published (e.g., "csv", "shapefile", "geojson")
     pub fn set_file_type(mut self, filetype: impl Into<String>) -> Self {
         self.filetype = filetype.into();
@@ -57,140 +63,7 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         self
     }
 
-    /// Helper method to publish a CSV file with coordinate fields
-    ///
-    /// # Arguments
-    /// * `name` - Name for the published service
-    /// * `lat_field` - Name of the latitude field in the CSV
-    /// * `lon_field` - Name of the longitude field in the CSV
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use arcgis_sharing_rs::ArcGISSharingClient;
-    /// # async fn example(client: &ArcGISSharingClient, item_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    /// let response = client
-    ///     .item(None::<String>, item_id)
-    ///     .publish()
-    ///     .csv_with_coordinates("MyService", "Latitude", "Longitude")
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    // pub fn csv_with_coordinates(
-    //     mut self,
-    //     name: impl Into<String>,
-    //     lat_field: impl Into<String>,
-    //     lon_field: impl Into<String>,
-    // ) -> Self {
-    //     let lat_field = lat_field.into();
-    //     let lon_field = lon_field.into();
-    //     let name = name.into();
-    //
-    //     self.filetype = "csv".to_string();
-    //     self.publish_parameters = serde_json::json!({
-    //         "type": "csv",
-    //         "name": name,
-    //         "locationType": "coordinates",
-    //         "latitudeFieldName": lat_field,
-    //         "longitudeFieldName": lon_field,
-    //         "coordinateFieldType": "LatitudeAndLongitude",
-    //         "sourceSR": {
-    //             "wkid": 4326,
-    //             "latestWkid": 4326
-    //         },
-    //         "targetSR": {
-    //             "wkid": 102100,
-    //             "latestWkid": 3857
-    //         }
-    //     });
-    //     self
-    // }
-
-    /// Helper method to publish a shapefile
-    ///
-    /// # Arguments
-    /// * `name` - Name for the published service
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use arcgis_sharing_rs::ArcGISSharingClient;
-    /// # async fn example(client: &ArcGISSharingClient, item_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    /// let response = client
-    ///     .item(None::<String>, item_id)
-    ///     .publish()
-    ///     .shapefile("MyShapefileService")
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    // pub fn shapefile(mut self, name: impl Into<String>) -> Self {
-    //     self.filetype = "shapefile".to_string();
-    //     self.publish_parameters = serde_json::json!({
-    //         "name": name.into(),
-    //         "targetSR": {
-    //             "wkid": 102100,
-    //             "latestWkid": 3857
-    //         }
-    //     });
-    //     self
-    // }
-
-    /// Helper method to publish a GeoJSON file
-    ///
-    /// # Arguments
-    /// * `name` - Name for the published service
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use arcgis_sharing_rs::ArcGISSharingClient;
-    /// # async fn example(client: &ArcGISSharingClient, item_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    /// let response = client
-    ///     .item(None::<String>, item_id)
-    ///     .publish()
-    ///     .geojson("MyGeoJSONService")
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    // pub fn geojson(mut self, name: impl Into<String>) -> Self {
-    //     self.filetype = "geojson".to_string();
-    //     self.publish_parameters = serde_json::json!({
-    //         "name": name.into(),
-    //         "targetSR": {
-    //             "wkid": 102100,
-    //             "latestWkid": 3857
-    //         }
-    //     });
-    //     self
-    // }
-
-    /// Helper method to publish a service definition file
-    ///
-    /// Service definition files contain all the necessary information for publishing
-    /// and typically don't require additional parameters.
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use arcgis_sharing_rs::ArcGISSharingClient;
-    /// # async fn example(client: &ArcGISSharingClient, item_id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    /// let response = client
-    ///     .item(None::<String>, item_id)
-    ///     .publish()
-    ///     .service_definition()
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    // pub fn service_definition(mut self) -> Self {
-    //     self.filetype = "serviceDefinition".to_string();
-    //     self.publish_parameters = serde_json::json!({});
-    //     self
-    // }
-
+    // TODO: I may be able to convert this to a re-usable trait
     fn to_multipart(&self) -> Result<Form> {
         let mut form = Form::new();
 

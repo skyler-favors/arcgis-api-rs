@@ -3,8 +3,6 @@ mod update;
 
 use crate::{
     api::item::{publish::PublishItemBuilder, update::UpdateItemBuilder},
-    error::{Result, UrlParseSnafu},
-    models::FeatureServiceInfo,
     ArcGISSharingClient,
 };
 

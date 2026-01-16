@@ -1,11 +1,6 @@
 mod add_item;
 
-use crate::{
-    api::content::add_item::AddItemBuilder,
-    error::{Result, UrlParseSnafu},
-    models::FeatureServiceInfo,
-    ArcGISSharingClient,
-};
+use crate::{api::content::add_item::AddItemBuilder, ArcGISSharingClient};
 
 pub struct ContentHandler<'a> {
     client: &'a ArcGISSharingClient,

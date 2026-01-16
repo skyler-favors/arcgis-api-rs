@@ -1,9 +1,10 @@
-use crate::{api::ItemHandler, error::Result, models::*};
+use crate::{api::ItemHandler, error::Result};
 use serde::Serialize;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateItemBuilder<'a, 'r> {
+    #[allow(dead_code)]
     #[serde(skip)]
     handler: &'r ItemHandler<'a>,
 }

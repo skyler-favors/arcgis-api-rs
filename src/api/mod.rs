@@ -1,7 +1,7 @@
 mod community;
 mod content;
 mod feature_service;
-mod item;
+pub mod item;
 
 pub use community::*;
 pub use content::*;
