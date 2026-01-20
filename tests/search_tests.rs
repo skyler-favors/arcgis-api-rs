@@ -265,4 +265,27 @@ mod search_tests {
             "Should have taken at least 100ms with delay"
         );
     }
+
+    #[tokio::test]
+    async fn test_living_atlas_search() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let results: Vec<_> = client
+            .search()
+            //.query("orgid:0123456789ABCDEF AND (type:\"Feature Service\" (water))")
+            .query("owner:esri_livingatlas AND (type:\"Feature Service\" (water))")
+            .set_num(5)
+            .set_max_pages(1)
+            .send()
+            .collect()
+            .await;
+
+        // println!("Found {} results", results.len());
+        // for result in results {
+        //     println!("{} {} {}", result.title, result.type_field, result.owner);
+        // }
+
+        assert!(results.len() > 0, "Should have found some results");
+    }
 }
