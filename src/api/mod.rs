@@ -2,12 +2,14 @@ mod community;
 mod content;
 mod feature_service;
 mod item;
+mod portals;
 mod search;
 
 pub use community::*;
 pub use content::*;
 pub use feature_service::*;
 pub use item::*;
+pub use portals::*;
 pub use search::*;
 
 /// Serializes a Vec<String> or Vec<T: Display> as a single comma-separated string.

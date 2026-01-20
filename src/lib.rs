@@ -457,4 +457,8 @@ impl ArcGISSharingClient {
     pub fn search(&self) -> SearchBuilder<'_> {
         SearchBuilder::new(self)
     }
+
+    pub fn portals(&self) -> PortalsHandler<'_> {
+        PortalsHandler::new(self)
+    }
 }
