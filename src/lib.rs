@@ -412,6 +412,10 @@ impl ArcGISSharingClient {
         GroupsHandler::new(self, id.into())
     }
 
+    pub fn search_groups(&self) -> GroupSearchBuilder<'_> {
+        GroupSearchBuilder::new(self)
+    }
+
     pub fn feature_service(&self, url: impl Into<String>) -> FeatureServiceHandler<'_> {
         FeatureServiceHandler::new(self, url.into())
     }

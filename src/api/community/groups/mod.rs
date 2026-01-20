@@ -1,6 +1,9 @@
 mod delete;
+mod search;
 
 use crate::{api::community::groups::delete::DeleteGroupsBuilder, ArcGISSharingClient};
+
+pub use search::*;
 
 pub struct GroupsHandler<'a> {
     client: &'a ArcGISSharingClient,

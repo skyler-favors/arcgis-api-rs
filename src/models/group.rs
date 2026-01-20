@@ -15,7 +15,26 @@ pub struct CreateGroupResponse {
     pub group: Group,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GroupSearchResponse {
+    #[serde(default)]
+    pub total: i64,
+    #[serde(default)]
+    pub start: i64,
+    #[serde(default)]
+    pub num: i64,
+    #[serde(default = "default_next_start")]
+    pub next_start: i64,
+    #[serde(default)]
+    pub results: Vec<Group>,
+}
+
+fn default_next_start() -> i64 {
+    -1
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Group {
     pub id: String,
@@ -52,7 +71,7 @@ pub struct Group {
     pub display_settings: Option<DisplaySettings>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplaySettings {
     pub item_types: String,
