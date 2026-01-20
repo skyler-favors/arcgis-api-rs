@@ -53,7 +53,7 @@ pub struct Item {
     pub license_info: Option<String>,
     pub culture: Option<String>,
     #[serde(default)]
-    pub url: Value,
+    pub url: String,
     #[serde(default)]
     pub proxy_filter: Value,
     pub access: Option<String>,
