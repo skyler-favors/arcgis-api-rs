@@ -377,6 +377,24 @@ impl CSVPublishParameterBuilder {
         self.add_field(name, "esriFieldTypeDate", "sqlTypeTimestamp2", None, None)
     }
 
+    pub fn add_date_only_field(self, name: impl Into<String>) -> Self {
+        self.add_field(name, "esriFieldTypeDateOnly", "sqlTypeDate", None, None)
+    }
+
+    pub fn add_time_only_field(self, name: impl Into<String>) -> Self {
+        self.add_field(name, "esriFieldTypeTimeOnly", "sqlTypeTime", None, None)
+    }
+
+    pub fn add_timestamp_offset_field(self, name: impl Into<String>) -> Self {
+        self.add_field(
+            name,
+            "esriFieldTypeTimestampOffset",
+            "sqlTypeOffset",
+            None,
+            None,
+        )
+    }
+
     /// Internal helper to add a field to the layer info
     fn add_field(
         mut self,
