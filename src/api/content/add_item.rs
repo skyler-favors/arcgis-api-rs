@@ -395,7 +395,6 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
         self
     }
 
-    // Metadata setters
     pub fn metadata_editable(mut self, value: bool) -> Self {
         self.metadata_editable = Some(value);
         self
@@ -403,6 +402,11 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
 
     pub fn metadata_formats(mut self, formats: impl Into<String>) -> Self {
         self.metadata_formats = Some(formats.into());
+        self
+    }
+
+    pub fn set_text(mut self, text: impl Into<String>) -> Self {
+        self.text = Some(text.into());
         self
     }
 
