@@ -2,348 +2,18 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapJson {
-    pub operational_layers: Vec<OperationalLayer>,
-    pub base_map: BaseMap,
-    pub authoring_app: String,
-    pub authoring_app_version: String,
-    pub initial_state: InitialState,
-    pub spatial_reference: SpatialReference2,
-    pub time_zone: String,
-    pub version: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OperationalLayer {
-    pub id: String,
-    pub show_legend: Option<bool>,
-    pub opacity: Option<f64>,
-    pub disable_popup: Option<bool>,
-    pub title: String,
-    pub url: Option<String>,
-    pub visibility: Option<bool>,
-    pub layer_type: String,
-    pub layer_definition: Option<LayerDefinition>,
-    pub popup_info: Option<PopupInfo>,
-    pub item_id: Option<String>,
-    pub feature_effect: Value,
-    pub show_labels: Option<bool>,
-    pub effect: Option<Vec<Effect>>,
-    pub blend_mode: Option<String>,
-    pub style_url: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LayerDefinition {
-    pub feature_reduction: Value,
-    pub drawing_info: WebMapDrawingInfo,
-    pub definition_expression: Value,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapDrawingInfo {
-    pub renderer: WebMapRenderer,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapRenderer {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub symbol: Option<WebMapSymbol>,
-    pub authoring_info: Option<AuthoringInfo>,
-    #[serde(default)]
-    pub class_break_infos: Vec<ClassBreakInfo>,
-    pub field: Option<String>,
-    pub legend_options: Option<LegendOptions>,
-    pub min_value: Option<i64>,
-    pub visual_variables: Option<Vec<VisualVariable2>>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapSymbol {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub color: Option<Vec<i64>>,
-    pub outline: Option<Outline>,
-    pub style: Option<String>,
-    pub symbol: Option<WebMapSymbol2>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Outline {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub color: Vec<i64>,
-    pub width: f64,
-    pub style: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapSymbol2 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub symbol_layers: Vec<SymbolLayer>,
-    pub angle_alignment: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SymbolLayer {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub enable: bool,
-    pub cap_style: Option<String>,
-    pub join_style: Option<String>,
-    #[serde(rename = "lineStyle3D")]
-    pub line_style3d: Option<String>,
-    pub miter_limit: Option<i64>,
-    pub width: Option<f64>,
-    #[serde(rename = "height3D")]
-    pub height3d: Option<i64>,
-    #[serde(rename = "anchor3D")]
-    pub anchor3d: Option<String>,
-    pub color: Vec<i64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthoringInfo {
-    #[serde(default)]
-    pub visual_variables: Vec<VisualVariable>,
-    #[serde(rename = "type")]
-    pub type_field: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualVariable {
-    pub max_slider_value: i64,
-    pub min_slider_value: i64,
-    pub theme: String,
-    #[serde(rename = "type")]
-    pub type_field: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassBreakInfo {
-    pub class_max_value: i64,
-    pub symbol: WebMapSymbol3,
-    pub label: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WebMapSymbol3 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub color: Vec<i64>,
-    pub outline: Outline2,
-    pub style: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Outline2 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub color: Vec<i64>,
-    pub width: f64,
-    pub style: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LegendOptions {}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct VisualVariable2 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub field: Option<String>,
-    pub stops: Vec<Stop>,
-    pub value_expression: Option<String>,
-    pub target: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Stop {
-    pub color: Option<Vec<i64>>,
-    pub value: i64,
-    pub size: Option<f64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PopupInfo {
-    pub popup_elements: Vec<PopupElement>,
-    pub description: Option<String>,
-    pub expression_infos: Vec<Value>,
-    pub field_infos: Vec<FieldInfo2>,
-    pub title: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PopupElement {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub text: Option<String>,
-    pub description: Option<String>,
-    #[serde(default)]
-    pub field_infos: Vec<FieldInfo>,
-    pub title: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FieldInfo {
-    pub field_name: String,
-    pub is_editable: bool,
-    pub label: String,
-    pub visible: bool,
-    pub format: Option<Format>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Format {
-    pub digit_separator: bool,
-    pub places: Option<i64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FieldInfo2 {
-    pub field_name: String,
-    pub format: Option<Format2>,
-    pub is_editable: bool,
-    pub label: String,
-    pub visible: bool,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Format2 {
-    pub digit_separator: bool,
-    pub places: Option<i64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Effect {
-    pub scale: f64,
-    pub value: Vec<EffectValue>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EffectValue {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub xoffset: f64,
-    pub yoffset: f64,
-    pub blur_radius: f64,
-    pub color: Vec<i64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BaseMap {
-    pub base_map_layers: Vec<BaseMapLayer>,
-    pub title: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct BaseMapLayer {
-    pub id: String,
-    pub opacity: Option<i64>,
-    pub title: String,
-    pub url: Option<String>,
-    pub visibility: bool,
-    pub layer_type: String,
-    #[serde(default)]
-    pub effect: Vec<Effect2>,
-    pub style_url: Option<String>,
-    pub blend_mode: Option<String>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Effect2 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub angle: Option<i64>,
-    pub amount: Option<f64>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InitialState {
-    pub viewpoint: Viewpoint,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Viewpoint {
-    pub target_geometry: TargetGeometry,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TargetGeometry {
-    pub spatial_reference: SpatialReference,
-    pub xmin: f64,
-    pub ymin: f64,
-    pub xmax: f64,
-    pub ymax: f64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SpatialReference {
-    pub latest_wkid: i64,
-    pub wkid: i64,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SpatialReference2 {
-    pub latest_wkid: i64,
-    pub wkid: i64,
-}
-
-/// Preset basemap options for web maps
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum BasemapPreset {
-    Topographic,
-    Streets,
-    Imagery,
-    DarkGray,
-    LightGray,
-    Navigation,
-}
+use crate::models::webmap::*;
 
 /// Builder for creating web map JSON configurations
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct WebMapBuilder {
     operational_layers: Vec<OperationalLayer>,
-    basemap: BaseMap,
+    base_map: BaseMap,
     authoring_app: String,
     authoring_app_version: String,
     initial_state: Option<InitialState>,
-    spatial_reference: SpatialReference2,
+    spatial_reference: SpatialReference,
     time_zone: String,
     version: String,
 }
@@ -353,20 +23,20 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::{WebMapBuilder, BasemapPreset};
+    /// # use arcgis_sharing_rs::models::BasemapPreset;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let web_map = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
-    ///     .set_basemap(BasemapPreset::Topographic)
-    ///     .build();
+    ///     .set_basemap(BasemapPreset::Topographic);
     /// ```
     pub fn new() -> Self {
         Self {
             operational_layers: Vec::new(),
-            basemap: Self::create_basemap_config(BasemapPreset::Topographic),
+            base_map: Self::create_basemap_config(BasemapPreset::Topographic),
             authoring_app: "ArcGISMapViewer".to_string(),
             authoring_app_version: "2025.3".to_string(),
             initial_state: None,
-            spatial_reference: SpatialReference2 {
+            spatial_reference: SpatialReference {
                 latest_wkid: 3857,
                 wkid: 102100,
             },
@@ -383,7 +53,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer");
     /// ```
@@ -428,7 +98,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer_with_item_id(
     ///         "https://services.arcgis.com/.../FeatureServer/0",
@@ -481,7 +151,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
     ///     .set_layer_visibility(false);
@@ -500,7 +170,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
     ///     .set_layer_opacity(0.75);
@@ -519,7 +189,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
     ///     .with_popup("Feature Info {objectid}");
@@ -553,7 +223,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
     ///     .with_popup("Feature Info")
@@ -571,7 +241,7 @@ impl WebMapBuilder {
                 let field_name = field_name.into();
                 let label = label.into();
 
-                let field_info = FieldInfo2 {
+                let field_info = FieldInfo {
                     field_name: field_name.clone(),
                     format: None,
                     is_editable: editable,
@@ -606,7 +276,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
     ///     .with_popup("Feature Info")
@@ -625,12 +295,12 @@ impl WebMapBuilder {
                 let field_name = field_name.into();
                 let label = label.into();
 
-                let format = Format2 {
+                let format = Format {
                     digit_separator: true,
                     places: Some(places),
                 };
 
-                let field_info = FieldInfo2 {
+                let field_info = FieldInfo {
                     field_name: field_name.clone(),
                     format: Some(format.clone()),
                     is_editable: editable,
@@ -664,12 +334,13 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::{WebMapBuilder, BasemapPreset};
+    /// # use arcgis_sharing_rs::models::BasemapPreset;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .set_basemap(BasemapPreset::Streets);
     /// ```
     pub fn set_basemap(mut self, preset: BasemapPreset) -> Self {
-        self.basemap = Self::create_basemap_config(preset);
+        self.base_map = Self::create_basemap_config(preset);
         self
     }
 
@@ -684,7 +355,7 @@ impl WebMapBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::WebMapBuilder;
+    /// # use arcgis_sharing_rs::builders::WebMapBuilder;
     /// let builder = WebMapBuilder::new()
     ///     .set_extent(-109.5, 41.0, -109.0, 41.5, 4326);
     /// ```
@@ -706,41 +377,31 @@ impl WebMapBuilder {
         self
     }
 
-    /// Build the final web map JSON structure
-    ///
-    /// # Example
-    /// ```no_run
-    /// # use arcgis_sharing_rs::models::{WebMapBuilder, BasemapPreset};
-    /// let web_map = WebMapBuilder::new()
-    ///     .add_feature_layer("https://services.arcgis.com/.../FeatureServer/0", "My Layer")
-    ///     .set_basemap(BasemapPreset::Topographic)
-    ///     .build();
-    /// ```
-    pub fn build(self) -> WebMapJson {
-        WebMapJson {
-            operational_layers: self.operational_layers,
-            base_map: self.basemap,
-            authoring_app: self.authoring_app,
-            authoring_app_version: self.authoring_app_version,
-            initial_state: self.initial_state.unwrap_or_else(|| InitialState {
-                viewpoint: Viewpoint {
-                    target_geometry: TargetGeometry {
-                        spatial_reference: SpatialReference {
-                            latest_wkid: 3857,
-                            wkid: 102100,
-                        },
-                        xmin: -20037508.342789244,
-                        ymin: -20037508.342789244,
-                        xmax: 20037508.342789244,
-                        ymax: 20037508.342789244,
-                    },
-                },
-            }),
-            spatial_reference: self.spatial_reference,
-            time_zone: self.time_zone,
-            version: self.version,
-        }
-    }
+    // pub fn build(self) -> WebMapJson {
+    //     WebMapJson {
+    //         operational_layers: self.operational_layers,
+    //         base_map: self.basemap,
+    //         authoring_app: self.authoring_app,
+    //         authoring_app_version: self.authoring_app_version,
+    //         initial_state: self.initial_state.unwrap_or_else(|| InitialState {
+    //             viewpoint: Viewpoint {
+    //                 target_geometry: TargetGeometry {
+    //                     spatial_reference: SpatialReference {
+    //                         latest_wkid: 3857,
+    //                         wkid: 102100,
+    //                     },
+    //                     xmin: -20037508.342789244,
+    //                     ymin: -20037508.342789244,
+    //                     xmax: 20037508.342789244,
+    //                     ymax: 20037508.342789244,
+    //                 },
+    //             },
+    //         }),
+    //         spatial_reference: self.spatial_reference,
+    //         time_zone: self.time_zone,
+    //         version: self.version,
+    //     }
+    // }
 
     /// Create a basemap configuration from a preset
     fn create_basemap_config(preset: BasemapPreset) -> BaseMap {
@@ -878,8 +539,7 @@ mod tests {
                 "https://services.arcgis.com/test/FeatureServer/0",
                 "Test Layer",
             )
-            .set_basemap(BasemapPreset::Topographic)
-            .build();
+            .set_basemap(BasemapPreset::Topographic);
 
         // Verify basic structure
         assert_eq!(web_map.operational_layers.len(), 1);
@@ -902,8 +562,7 @@ mod tests {
             )
             .with_popup("Feature Info")
             .add_popup_field("name", "Name", true, true)
-            .add_popup_field_with_format("value", "Value", true, true, 2)
-            .build();
+            .add_popup_field_with_format("value", "Value", true, true, 2);
 
         // Verify popup configuration
         let layer = &web_map.operational_layers[0];
@@ -929,18 +588,16 @@ mod tests {
         ];
 
         for (preset, expected_title) in basemaps {
-            let web_map = WebMapBuilder::new().set_basemap(preset).build();
+            let web_map = WebMapBuilder::new().set_basemap(preset);
             assert_eq!(web_map.base_map.title, expected_title);
         }
     }
 
     #[test]
     fn test_web_map_builder_extent() {
-        let web_map = WebMapBuilder::new()
-            .set_extent(-109.5, 41.0, -109.0, 41.5, 4326)
-            .build();
+        let web_map = WebMapBuilder::new().set_extent(-109.5, 41.0, -109.0, 41.5, 4326);
 
-        let viewpoint = &web_map.initial_state.viewpoint;
+        let viewpoint = &web_map.initial_state.unwrap().viewpoint;
         let geom = &viewpoint.target_geometry;
         assert_eq!(geom.xmin, -109.5);
         assert_eq!(geom.ymin, 41.0);
@@ -956,8 +613,9 @@ mod tests {
                 "https://services.arcgis.com/test/FeatureServer/0",
                 "Test Layer",
             )
-            .set_basemap(BasemapPreset::Topographic)
-            .build();
+            .set_basemap(BasemapPreset::Topographic);
+
+        println!("{}", serde_json::to_string_pretty(&web_map).unwrap());
 
         // Verify it can be serialized to JSON
         let json = serde_json::to_string(&web_map).unwrap();

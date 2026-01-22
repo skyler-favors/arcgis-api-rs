@@ -20,6 +20,7 @@ use url::Url;
 
 mod api;
 mod auth;
+pub mod builders;
 mod error;
 mod from_response;
 pub mod models;

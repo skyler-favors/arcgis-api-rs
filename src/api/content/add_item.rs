@@ -1,3 +1,4 @@
+use crate::builders::webmap::WebMapBuilder;
 use crate::error::UrlParseSnafu;
 use crate::{api::ContentHandler, error::Result, models::*};
 use reqwest::multipart::{Form, Part};
@@ -406,7 +407,7 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
     }
 
     /// Helper method for adding a web map item
-    pub fn web_map(mut self, title: impl Into<String>, builder: WebMapJson) -> Self {
+    pub fn web_map(mut self, title: impl Into<String>, builder: WebMapBuilder) -> Self {
         self = self.title(title);
         self = self.set_type("Web Map");
         self = self.text(serde_json::to_string(&builder).unwrap());

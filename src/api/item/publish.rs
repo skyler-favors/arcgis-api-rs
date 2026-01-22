@@ -1,4 +1,6 @@
-use crate::{api::ItemHandler, error::Result, models::*};
+use crate::{
+    api::ItemHandler, builders::publish::PublishParametersBuilder, error::Result, models::*,
+};
 use reqwest::multipart::Form;
 use serde::Serialize;
 use snafu::ResultExt;
@@ -33,7 +35,7 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         }
     }
 
-    pub fn csv_with_parameters(mut self, builder: CSVPublishParameterBuilder) -> Self {
+    pub fn csv_with_parameters(mut self, builder: PublishParametersBuilder) -> Self {
         self.filetype = "csv".to_string();
         self.publish_parameters = serde_json::to_string(&builder.build()).unwrap();
         self

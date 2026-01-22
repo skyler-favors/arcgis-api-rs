@@ -50,13 +50,14 @@ mod item_tests {
 
         // Then publish it using the builder
         // TODO: there must be a way to infer the field types from the CSV
-        let builder = arcgis_sharing_rs::models::CSVPublishParameterBuilder::new(&service_name)
-            .set_coordinate_fields("Latitude", "Longitude")
-            .add_string_field("status")
-            .add_double_field("temp_c")
-            .add_integer_field("id")
-            .add_date_field("timestamp")
-            .set_layer_name(&uuid);
+        let builder =
+            arcgis_sharing_rs::builders::publish::PublishParametersBuilder::new(&service_name)
+                .set_coordinate_fields("Latitude", "Longitude")
+                .add_string_field("status")
+                .add_double_field("temp_c")
+                .add_integer_field("id")
+                .add_date_field("timestamp")
+                .set_layer_name(&uuid);
 
         let publish_response = client
             .item(None::<String>, &add_response.id)

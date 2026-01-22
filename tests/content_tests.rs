@@ -46,15 +46,14 @@ mod content_tests {
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
 
         // Build web map using the builder pattern
-        let web_map = arcgis_sharing_rs::models::WebMapBuilder::new()
+        let web_map = arcgis_sharing_rs::builders::WebMapBuilder::new()
             .add_feature_layer(&fs_url, "cars")
             .with_popup("Feature Information {objectid}")
             .add_popup_field("objectid", "OBJECTID", false, true)
             .add_popup_field("make", "Make", false, true)
             // .add_popup_field_with_format("latitude", "Latitude", true, true, 2)
             // .add_popup_field_with_format("longitude", "Longitude", true, true, 2)
-            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic)
-            .build();
+            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic);
 
         let response = client
             .content(None::<String>)

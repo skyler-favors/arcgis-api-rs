@@ -45,7 +45,7 @@ mod search_tests {
         // Use small page size to ensure multiple pages are fetched
         let mut search_stream = client
             .search()
-            .query("type:\"Web Map\"")
+            .query("type:\"Web Map\" AND owner:esri_livingatlas")
             .set_num(3) // Very small page size
             .set_max_pages(3) // Limit to 3 pages
             .send();
@@ -115,7 +115,7 @@ mod search_tests {
         // Test using collect to gather all results
         let results: Vec<_> = client
             .search()
-            .query("type:\"Web Map\"")
+            .query("owner:esri_livingatlas AND type:\"Web Map\"")
             .set_num(3)
             .set_max_pages(2)
             .send()

@@ -54,7 +54,7 @@ mod integration_tests {
         let layer_name = format!("layer_{}", uuid.replace("-", "_"));
 
         let builder =
-            arcgis_sharing_rs::models::CSVPublishParameterBuilder::new(&service_item_name)
+            arcgis_sharing_rs::builders::publish::PublishParametersBuilder::new(&service_item_name)
                 .set_coordinate_fields("Latitude", "Longitude")
                 .add_string_field("status")
                 .add_double_field("temp_c")
@@ -78,7 +78,7 @@ mod integration_tests {
     ) -> AddItemResponse {
         let web_map_name = format!("webmapIntegrationTestMap_{}", uuid.replace("-", "_"));
 
-        let web_map = arcgis_sharing_rs::models::WebMapBuilder::new()
+        let web_map = arcgis_sharing_rs::builders::webmap::WebMapBuilder::new()
             .add_feature_layer(fs_url, "my_custom_layer")
             .with_popup("Feature Information {objectid}")
             .add_popup_field("objectid", "OBJECTID", false, true)
@@ -86,8 +86,7 @@ mod integration_tests {
             .add_popup_field("status", "Status", false, true)
             .add_popup_field_with_format("latitude", "Latitude", true, true, 2)
             .add_popup_field_with_format("longitude", "Longitude", true, true, 2)
-            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic)
-            .build();
+            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic);
 
         client
             .content(None::<String>)

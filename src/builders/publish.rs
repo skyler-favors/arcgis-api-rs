@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CSVPublishParameterBuilder {
+pub struct PublishParametersBuilder {
     #[serde(rename = "type")]
     pub type_field: String,
     pub name: String,
@@ -247,7 +247,7 @@ pub struct TargetSR {
     pub latest_wkid: i64,
 }
 
-impl CSVPublishParameterBuilder {
+impl PublishParametersBuilder {
     /// Create a new CSV publish parameter builder with sensible defaults
     ///
     /// # Arguments
@@ -255,8 +255,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService");
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService");
     /// ```
     pub fn new(name: impl Into<String>) -> Self {
         Self {
@@ -303,8 +303,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_coordinate_fields("Latitude", "Longitude");
     /// ```
     pub fn set_coordinate_fields(
@@ -324,8 +324,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .add_string_field("status");
     /// ```
     pub fn add_string_field(self, name: impl Into<String>) -> Self {
@@ -339,8 +339,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .add_double_field("temperature");
     /// ```
     pub fn add_double_field(self, name: impl Into<String>) -> Self {
@@ -354,8 +354,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .add_integer_field("count");
     /// ```
     pub fn add_integer_field(self, name: impl Into<String>) -> Self {
@@ -369,8 +369,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .add_date_field("timestamp");
     /// ```
     pub fn add_date_field(self, name: impl Into<String>) -> Self {
@@ -434,8 +434,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_max_records(2000);
     /// ```
     pub fn set_max_records(mut self, max: i64) -> Self {
@@ -456,8 +456,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_description("My CSV service");
     /// ```
     pub fn set_description(mut self, desc: impl Into<String>) -> Self {
@@ -479,8 +479,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_column_delimiter(";");
     /// ```
     pub fn set_column_delimiter(mut self, delimiter: impl Into<String>) -> Self {
@@ -496,8 +496,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_source_sr(4326, 4326);
     /// ```
     pub fn set_source_sr(mut self, wkid: i64, latest_wkid: i64) -> Self {
@@ -513,8 +513,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_target_sr(102100, 3857);
     /// ```
     pub fn set_target_sr(mut self, wkid: i64, latest_wkid: i64) -> Self {
@@ -529,8 +529,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .enable_editor_tracking(true);
     /// ```
     pub fn enable_editor_tracking(mut self, enable: bool) -> Self {
@@ -547,8 +547,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .allow_others_to_update(false);
     /// ```
     pub fn allow_others_to_update(mut self, allow: bool) -> Self {
@@ -565,8 +565,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .allow_others_to_delete(true);
     /// ```
     pub fn allow_others_to_delete(mut self, allow: bool) -> Self {
@@ -583,8 +583,8 @@ impl CSVPublishParameterBuilder {
     ///
     /// # Example
     /// ```no_run
-    /// # use arcgis_sharing_rs::models::CSVPublishParameterBuilder;
-    /// let builder = CSVPublishParameterBuilder::new("MyService")
+    /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
+    /// let builder = PublishParametersBuilder::new("MyService")
     ///     .set_layer_name("MyLayer");
     /// ```
     pub fn set_layer_name(mut self, layer_name: impl Into<String>) -> Self {
@@ -742,7 +742,7 @@ impl CSVPublishParameterBuilder {
 
         // Serialize to JSON value
         serde_json::to_value(&self).unwrap_or_else(|e| {
-            eprintln!("Failed to serialize CSVPublishParameterBuilder: {}", e);
+            eprintln!("Failed to serialize PublishParametersBuilder: {}", e);
             Value::Null
         })
     }
@@ -754,7 +754,7 @@ mod tests {
 
     #[test]
     fn test_builder_basic() {
-        let builder = CSVPublishParameterBuilder::new("TestService")
+        let builder = PublishParametersBuilder::new("TestService")
             .set_coordinate_fields("Latitude", "Longitude");
 
         let json = builder.build();
@@ -782,7 +782,7 @@ mod tests {
 
     #[test]
     fn test_builder_with_additional_fields() {
-        let builder = CSVPublishParameterBuilder::new("TestService")
+        let builder = PublishParametersBuilder::new("TestService")
             .set_coordinate_fields("Latitude", "Longitude")
             .add_string_field("status")
             .add_double_field("temperature");
@@ -813,7 +813,7 @@ mod tests {
 
     #[test]
     fn test_builder_customization() {
-        let builder = CSVPublishParameterBuilder::new("TestService")
+        let builder = PublishParametersBuilder::new("TestService")
             .set_coordinate_fields("Latitude", "Longitude")
             .set_max_records(2000)
             .set_description("Test description")
