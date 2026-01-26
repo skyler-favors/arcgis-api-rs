@@ -94,7 +94,7 @@ impl Default for ArcGISSharingClient {
     fn default() -> ArcGISSharingClient {
         ArcGISSharingClient {
             client: reqwest::Client::new(),
-            portal: Url::parse("https://arcgis.com").expect("Invalid portal URL"),
+            portal: Url::parse("https://arcgis.com/").expect("Invalid portal URL"),
             auth_state: AuthState::None,
         }
     }
@@ -391,9 +391,12 @@ impl ArcGISSharingClientBuilder {
             },
         };
 
-        // TODO: verify portal is valid arcgis portal url
-        let portal =
-            Url::parse(&self.portal.expect("No portal provided")).expect("Invalid portal URL");
+        // Ensure portal URL ends with a trailing slash for correct Url::join() behavior
+        let mut portal_str = self.portal.expect("No portal provided");
+        if !portal_str.ends_with('/') {
+            portal_str.push('/');
+        }
+        let portal = Url::parse(&portal_str).expect("Invalid portal URL");
 
         ArcGISSharingClient {
             client: reqwest::Client::new(),
