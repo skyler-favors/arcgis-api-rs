@@ -26,3 +26,9 @@ pub struct PublishItemService {
     #[serde(rename = "type")]
     pub service_type: String,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateItemResponse {
+    pub success: bool,
+    pub id: String,
+}

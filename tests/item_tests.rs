@@ -76,4 +76,99 @@ mod item_tests {
             publish_response.services[0].service_item_id, publish_response.services[0].job_id
         );
     }
+
+    #[tokio::test]
+    async fn test_update_item() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let original_title = format!("test-update-{}", uuid);
+        let updated_title = format!("test-updated-{}", uuid);
+        let filename = format!("{}.csv", uuid);
+
+        let test_csv = r#"id,name
+1,Test Item 1
+2,Test Item 2"#;
+
+        // First add a CSV item
+        let add_response = client
+            .content(None::<String>)
+            .add_item()
+            .file(test_csv)
+            .set_type("CSV")
+            .title(&original_title)
+            .description("Original description")
+            .tags("test, original")
+            .filename(&filename)
+            .send()
+            .await
+            .unwrap();
+
+        assert!(add_response.success);
+        println!("Added item with ID: {}", add_response.id);
+
+        // Now update the item with multiple fields
+        let update_response = client
+            .item(None::<String>, &add_response.id)
+            .update()
+            .title(&updated_title)
+            .description("Updated description")
+            .tags("test, updated, csv")
+            .snippet("This is an updated item")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(update_response.success);
+        assert_eq!(update_response.id, add_response.id);
+        println!("Updated item successfully with title: {}", updated_title);
+    }
+
+    #[tokio::test]
+    async fn test_update_existing_item() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        // Use the existing test item
+        let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+        
+        // Get current item info
+        let original_item = client
+            .item(None::<String>, &item_id)
+            .info()
+            .await
+            .unwrap();
+        
+        let original_title = original_item.title.clone();
+        println!("Original item title: {}", original_title);
+
+        // Update with a temporary title
+        let temp_title = format!("{} - Updated at {}", original_title, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S"));
+        let update_response = client
+            .item(None::<String>, &item_id)
+            .update()
+            .title(&temp_title)
+            .snippet("Temporarily updated by test")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(update_response.success);
+        assert_eq!(update_response.id, item_id);
+        println!("Updated existing item with temporary title");
+
+        // Restore original title
+        let restore_response = client
+            .item(None::<String>, &item_id)
+            .update()
+            .title(&original_title)
+            .snippet("Test completed")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(restore_response.success);
+        println!("Restored original title: {}", original_title);
+    }
 }
