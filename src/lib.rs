@@ -223,6 +223,7 @@ impl ArcGISSharingClient {
         let response = self
             ._get_with_headers(self.parameterized_uri(route, parameters)?, headers)
             .await?;
+
         let bytes = map_arcgis_error(response).await?;
         R::from_response(bytes).await
     }
