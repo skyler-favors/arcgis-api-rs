@@ -675,7 +675,7 @@ impl PublishParametersBuilder {
     ///
     /// This method is called internally to generate the complete JSON structure
     /// needed for publishing the CSV file.
-    pub(crate) fn build(mut self) -> Value {
+    pub fn build(mut self) -> Value {
         // Initialize layer_info if not present
         if self.layer_info.is_none() {
             self.layer_info = Some(self.create_default_layer_info());

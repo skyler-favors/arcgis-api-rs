@@ -35,13 +35,23 @@ pub struct UpdateItemResponse {
     pub id: String,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyzeResponse {
+    pub publish_parameters: serde_json::Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_locale: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location_type: Option<String>,
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebMapDataJson {
     pub authoring_app: String,
     pub authoring_app_version: String,
     pub base_map: BaseMap,
-    pub initial_state: InitialState,
+    pub initial_state: Option<InitialState>,
     pub operational_layers: Vec<OperationalLayer>,
     pub spatial_reference: SpatialReference,
     pub time_zone: String,

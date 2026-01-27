@@ -21,19 +21,22 @@ impl std::error::Error for UriParseError {}
 #[snafu(visibility(pub))]
 #[non_exhaustive]
 pub enum Error {
+    #[snafu(display("ArcGIS Error: {}\nFound at {}", source, backtrace))]
     Arcgis {
         source: Box<ArcgisError>,
         backtrace: Backtrace,
     },
+    #[snafu(display("URL Parse Error: {} at {}", source, backtrace))]
     UrlParse {
         source: url::ParseError,
         backtrace: Backtrace,
     },
-
+    #[snafu(display("Invalid Header: {} at {}", source, backtrace))]
     UriParse {
         source: UriParseError,
         backtrace: Backtrace,
     },
+    #[snafu(display("URL Parse Error: {} at {}", source, backtrace))]
     Uri {
         source: InvalidUri,
         backtrace: Backtrace,
@@ -106,24 +109,25 @@ pub struct ArcgisError {
 
 impl fmt::Display for ArcgisError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Format: "400 [CODE] - Message"
         write!(f, "{}", self.code)?;
 
-        if let Some(code) = self.message_code.as_ref() {
+        if let Some(ref code) = self.message_code {
             write!(f, " / {code}")?;
         }
 
         write!(f, " - {}", self.message)?;
 
-        if let Some(errors) = &self.details {
-            write!(f, "\nErrors:")?;
-            for error in errors.iter() {
-                write!(f, "\n- {error}")?;
+        if let Some(ref errors) = self.details {
+            for error in errors {
+                write!(f, "\n  Detail: {error}")?;
             }
         }
 
         Ok(())
     }
 }
+
 impl std::error::Error for ArcgisError {}
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
