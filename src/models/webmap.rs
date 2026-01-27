@@ -15,7 +15,7 @@ pub struct OperationalLayer {
     pub layer_definition: Option<LayerDefinition>,
     pub popup_info: Option<PopupInfo>,
     pub item_id: Option<String>,
-    pub feature_effect: Value,
+    pub feature_effect: Option<Value>,
     pub show_labels: Option<bool>,
     pub effect: Option<Vec<Effect>>,
     pub blend_mode: Option<String>,
@@ -25,9 +25,9 @@ pub struct OperationalLayer {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerDefinition {
-    pub feature_reduction: Value,
-    pub drawing_info: WebMapDrawingInfo,
-    pub definition_expression: Value,
+    pub feature_reduction: Option<Value>,
+    pub drawing_info: Option<WebMapDrawingInfo>,
+    pub definition_expression: Option<Value>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -155,7 +155,7 @@ pub struct Stop {
 pub struct PopupInfo {
     pub popup_elements: Vec<PopupElement>,
     pub description: Option<String>,
-    pub expression_infos: Vec<Value>,
+    pub expression_infos: Option<Vec<Value>>,
     pub field_infos: Vec<FieldInfo>,
     pub title: String,
 }
@@ -241,7 +241,7 @@ pub struct Effect2 {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InitialState {
-    pub viewpoint: Viewpoint,
+    pub viewpoint: Option<Viewpoint>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

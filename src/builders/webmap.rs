@@ -72,13 +72,13 @@ impl WebMapBuilder {
             visibility: Some(true),
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
-                feature_reduction: Value::Null,
-                drawing_info: WebMapDrawingInfo::default(),
-                definition_expression: Value::Null,
+                feature_reduction: Some(Value::Null),
+                drawing_info: Some(WebMapDrawingInfo::default()),
+                definition_expression: Some(Value::Null),
             }),
             popup_info: None,
             item_id: None,
-            feature_effect: Value::Null,
+            feature_effect: Some(Value::Null),
             show_labels: Some(false),
             effect: None,
             blend_mode: None,
@@ -127,13 +127,13 @@ impl WebMapBuilder {
             visibility: Some(true),
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
-                feature_reduction: Value::Null,
-                drawing_info: WebMapDrawingInfo::default(),
-                definition_expression: Value::Null,
+                feature_reduction: Some(Value::Null),
+                drawing_info: Some(WebMapDrawingInfo::default()),
+                definition_expression: Some(Value::Null),
             }),
             popup_info: None,
             item_id: Some(item_id),
-            feature_effect: Value::Null,
+            feature_effect: Some(Value::Null),
             show_labels: Some(false),
             effect: None,
             blend_mode: None,
@@ -205,7 +205,7 @@ impl WebMapBuilder {
                     title: None,
                 }],
                 description: None,
-                expression_infos: Vec::new(),
+                expression_infos: Some(Vec::new()),
                 field_infos: Vec::new(),
                 title: title.into(),
             });
@@ -361,7 +361,7 @@ impl WebMapBuilder {
     /// ```
     pub fn set_extent(mut self, xmin: f64, ymin: f64, xmax: f64, ymax: f64, wkid: i64) -> Self {
         self.initial_state = Some(InitialState {
-            viewpoint: Viewpoint {
+            viewpoint: Some(Viewpoint {
                 target_geometry: TargetGeometry {
                     spatial_reference: SpatialReference {
                         latest_wkid: wkid,
@@ -372,7 +372,7 @@ impl WebMapBuilder {
                     xmax,
                     ymax,
                 },
-            },
+            }),
         });
         self
     }
@@ -597,8 +597,8 @@ mod tests {
     fn test_web_map_builder_extent() {
         let web_map = WebMapBuilder::new().set_extent(-109.5, 41.0, -109.0, 41.5, 4326);
 
-        let viewpoint = &web_map.initial_state.unwrap().viewpoint;
-        let geom = &viewpoint.target_geometry;
+        let viewpoint = &web_map.initial_state.unwrap().viewpoint.clone();
+        let geom = &viewpoint.clone().unwrap().target_geometry;
         assert_eq!(geom.xmin, -109.5);
         assert_eq!(geom.ymin, 41.0);
         assert_eq!(geom.xmax, -109.0);
