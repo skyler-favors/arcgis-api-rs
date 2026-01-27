@@ -1,10 +1,11 @@
+mod data;
 mod publish;
 mod update;
 
 use snafu::ResultExt;
 
 use crate::{
-    api::item::{publish::PublishItemBuilder, update::UpdateItemBuilder},
+    api::item::{data::ItemDataBuilder, publish::PublishItemBuilder, update::UpdateItemBuilder},
     error::{Result, UrlParseSnafu},
     models::{Item, ItemInfoResult},
     ArcGISSharingClient,
@@ -37,6 +38,10 @@ impl<'a> ItemHandler<'a> {
 
         let response: ItemInfoResult = self.client.get(url, None::<&()>).await?;
         Ok(response.item)
+    }
+
+    pub fn data(&self) -> ItemDataBuilder<'_, '_> {
+        ItemDataBuilder::new(self)
     }
 
     pub fn update(&self) -> UpdateItemBuilder<'_, '_> {

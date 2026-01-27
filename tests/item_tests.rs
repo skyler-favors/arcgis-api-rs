@@ -5,6 +5,8 @@ use once_cell::sync::Lazy;
 
 #[serial_test::serial]
 mod item_tests {
+    use arcgis_sharing_rs::models::WebMapDataJson;
+
     use super::*;
 
     #[tokio::test]
@@ -15,6 +17,25 @@ mod item_tests {
         let item = client.item(None::<String>, &item_id).info().await.unwrap();
         assert_eq!(item.id, item_id);
         assert_eq!(item.title, "Cars");
+    }
+
+    #[tokio::test]
+    async fn test_get_item_data() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let item_id = std::env::var("TEST_ITEM_ID2").unwrap();
+
+        let data = client
+            .item(None::<String>, &item_id)
+            .data()
+            .send::<WebMapDataJson>()
+            .await
+            .unwrap();
+
+        println!(
+            "Item data: {}",
+            serde_json::to_string_pretty(&data).unwrap()
+        );
     }
 
     #[tokio::test]
@@ -132,19 +153,19 @@ mod item_tests {
 
         // Use the existing test item
         let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-        
+
         // Get current item info
-        let original_item = client
-            .item(None::<String>, &item_id)
-            .info()
-            .await
-            .unwrap();
-        
+        let original_item = client.item(None::<String>, &item_id).info().await.unwrap();
+
         let original_title = original_item.title.clone();
         println!("Original item title: {}", original_title);
 
         // Update with a temporary title
-        let temp_title = format!("{} - Updated at {}", original_title, chrono::Utc::now().format("%Y-%m-%d %H:%M:%S"));
+        let temp_title = format!(
+            "{} - Updated at {}",
+            original_title,
+            chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")
+        );
         let update_response = client
             .item(None::<String>, &item_id)
             .update()

@@ -32,3 +32,16 @@ pub struct UpdateItemResponse {
     pub success: bool,
     pub id: String,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WebMapDataJson {
+    pub authoring_app: String,
+    pub authoring_app_version: String,
+    pub base_map: BaseMap,
+    pub initial_state: InitialState,
+    pub operational_layers: Vec<OperationalLayer>,
+    pub spatial_reference: SpatialReference,
+    pub time_zone: String,
+    pub version: String,
+}
