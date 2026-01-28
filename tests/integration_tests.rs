@@ -6,7 +6,7 @@ use once_cell::sync::Lazy;
 #[serial_test::serial]
 mod integration_tests {
     use arcgis_sharing_rs::{
-        models::{AddItemResponse, AnalyzeResponse, PublishItemResponse},
+        models::{AddItemResponse, PublishItemResponse},
         ArcGISSharingClient,
     };
 
@@ -45,25 +45,10 @@ mod integration_tests {
             .unwrap()
     }
 
-    async fn analzye_csv_item(client: &ArcGISSharingClient, item_id: &str) -> serde_json::Value {
-        let response = client
-            .content(None::<String>)
-            .analyze()
-            .set_item_id(item_id)
-            .set_filetype("csv")
-            .send()
-            .await
-            .unwrap();
-
-        assert!(!response.publish_parameters.is_null());
-        response.publish_parameters
-    }
-
     async fn publish_csv_item(
         client: &ArcGISSharingClient,
         uuid: &str,
         csv_id: &str,
-        params: serde_json::Value,
     ) -> PublishItemResponse {
         let service_item_name = format!("webmapIntegrationTestService_{}", uuid.replace("-", "_"));
         let layer_name = format!("layer_{}", uuid.replace("-", "_"));
@@ -78,15 +63,11 @@ mod integration_tests {
                 .set_layer_name(layer_name)
                 .build();
 
-        //println!("{}", serde_json::to_string(&builder).unwrap());
-        //println!("{}", serde_json::to_string(&params).unwrap());
-
         client
             .item(None::<String>, csv_id)
             .publish()
             .set_publish_parameters(builder)
             .set_file_type("CSV")
-            //.csv_with_parameters(builder)
             .send()
             .await
             .unwrap()
@@ -100,6 +81,7 @@ mod integration_tests {
         let web_map_name = format!("webmapIntegrationTestMap_{}", uuid.replace("-", "_"));
 
         let web_map = arcgis_sharing_rs::builders::webmap::WebMapBuilder::new()
+            .set_extent(-109.5, 41.0, -109.0, 41.5, 4326)
             .add_feature_layer(fs_url, "my_custom_layer")
             .with_popup("Feature Information {objectid}")
             .add_popup_field("objectid", "OBJECTID", false, true)
@@ -124,9 +106,7 @@ mod integration_tests {
         let client = arcgis_sharing_rs::instance();
         let uuid = uuid::Uuid::new_v4().to_string();
         let add_csv_response = add_csv_item(&client, &uuid).await;
-        let analyze_response = analzye_csv_item(&client, &add_csv_response.id).await;
-        let publish_csv_response =
-            publish_csv_item(&client, &uuid, &add_csv_response.id, analyze_response).await;
+        let publish_csv_response = publish_csv_item(&client, &uuid, &add_csv_response.id).await;
         let service_url = publish_csv_response.services[0].serviceurl.clone();
         let web_map_response = add_web_map_item(&client, &uuid, &service_url).await;
         assert!(web_map_response.success)
