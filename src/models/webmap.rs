@@ -224,7 +224,7 @@ pub struct BaseMapLayer {
     pub visibility: bool,
     pub layer_type: String,
     #[serde(default)]
-    pub effect: Vec<Effect2>,
+    pub effect: Option<Vec<Effect2>>,
     pub style_url: Option<String>,
     pub blend_mode: Option<String>,
 }
