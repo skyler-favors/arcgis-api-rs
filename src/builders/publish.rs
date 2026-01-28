@@ -68,6 +68,11 @@ pub enum LocationType {
     Coordinates,
 }
 
+pub enum Coordinate {
+    Latitude,
+    Longitude,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CoordinateFieldType {
     LatitudeAndLongitude,
@@ -209,7 +214,9 @@ pub struct Field {
     #[serde(rename = "type")]
     pub type_field: String,
     pub alias: String,
-    pub sql_type: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sql_type: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_type: Option<String>,
@@ -312,8 +319,61 @@ impl PublishParametersBuilder {
         lat_field: impl Into<String>,
         lon_field: impl Into<String>,
     ) -> Self {
-        self.latitude_field_name = Some(lat_field.into());
-        self.longitude_field_name = Some(lon_field.into());
+        let lat_field = lat_field.into();
+        let lon_field = lon_field.into();
+
+        self.latitude_field_name = Some(lat_field.clone());
+        self.longitude_field_name = Some(lon_field.clone());
+
+        self = self.add_field(
+            lat_field,
+            "esriFieldTypeDouble",
+            Some("sqlTypeDouble"),
+            Some("latitude".to_string()),
+            None,
+        );
+
+        self = self.add_field(
+            lon_field,
+            "esriFieldTypeDouble",
+            Some("sqlTypeDouble"),
+            Some("longitude".to_string()),
+            None,
+        );
+
+        self
+    }
+
+    pub fn set_coordinate_field(
+        mut self,
+        field: impl Into<String>,
+        location_type: Coordinate,
+    ) -> Self {
+        let field = field.into();
+
+        match location_type {
+            Coordinate::Latitude => {
+                self.latitude_field_name = Some(field.clone());
+                self = self.add_field(
+                    field,
+                    "esriFieldTypeDouble",
+                    Some("sqlTypeDouble"),
+                    Some("latitude".to_string()),
+                    None,
+                );
+            }
+            Coordinate::Longitude => {
+                self.longitude_field_name = Some(field.clone());
+                self = self.add_field(
+                    field,
+                    "esriFieldTypeDouble",
+                    Some("sqlTypeDouble"),
+                    Some("longitude".to_string()),
+                    None,
+                );
+            }
+        }
+
         self
     }
 
@@ -328,8 +388,8 @@ impl PublishParametersBuilder {
     /// let builder = PublishParametersBuilder::new("MyService")
     ///     .add_string_field("status");
     /// ```
-    pub fn add_string_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeString", "sqlTypeOther", None, Some(256))
+    pub fn add_string_field(self, name: impl Into<String>, length: i64) -> Self {
+        self.add_field(name, "esriFieldTypeString", None, None, Some(length))
     }
 
     /// Add a double field to the layer
@@ -344,7 +404,13 @@ impl PublishParametersBuilder {
     ///     .add_double_field("temperature");
     /// ```
     pub fn add_double_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeDouble", "sqlTypeDouble", None, None)
+        self.add_field(
+            name,
+            "esriFieldTypeDouble",
+            Some("sqlTypeDouble"),
+            None,
+            None,
+        )
     }
 
     /// Add an integer field to the layer
@@ -359,7 +425,13 @@ impl PublishParametersBuilder {
     ///     .add_integer_field("count");
     /// ```
     pub fn add_integer_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeInteger", "sqlTypeInteger", None, None)
+        self.add_field(
+            name,
+            "esriFieldTypeInteger",
+            Some("sqlTypeInteger"),
+            None,
+            None,
+        )
     }
 
     /// Add a date field to the layer
@@ -374,22 +446,40 @@ impl PublishParametersBuilder {
     ///     .add_date_field("timestamp");
     /// ```
     pub fn add_date_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeDate", "sqlTypeTimestamp2", None, None)
+        self.add_field(
+            name,
+            "esriFieldTypeDate",
+            Some("sqlTypeTimestamp2"),
+            None,
+            None,
+        )
     }
 
     pub fn add_date_only_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeDateOnly", "sqlTypeDate", None, None)
+        self.add_field(
+            name,
+            "esriFieldTypeDateOnly",
+            Some("sqlTypeDate"),
+            None,
+            None,
+        )
     }
 
     pub fn add_time_only_field(self, name: impl Into<String>) -> Self {
-        self.add_field(name, "esriFieldTypeTimeOnly", "sqlTypeTime", None, None)
+        self.add_field(
+            name,
+            "esriFieldTypeTimeOnly",
+            Some("sqlTypeTime"),
+            None,
+            None,
+        )
     }
 
     pub fn add_timestamp_offset_field(self, name: impl Into<String>) -> Self {
         self.add_field(
             name,
             "esriFieldTypeTimestampOffset",
-            "sqlTypeOffset",
+            Some("sqlTypeOffset"),
             None,
             None,
         )
@@ -400,7 +490,7 @@ impl PublishParametersBuilder {
         mut self,
         name: impl Into<String>,
         field_type: &str,
-        sql_type: &str,
+        sql_type: Option<&str>,
         location_type: Option<String>,
         length: Option<i64>,
     ) -> Self {
@@ -409,7 +499,7 @@ impl PublishParametersBuilder {
             name: name.clone(),
             type_field: field_type.to_string(),
             alias: name.clone(),
-            sql_type: sql_type.to_string(),
+            sql_type: sql_type.map(|s| s.to_string()),
             location_type,
             length,
         };
@@ -681,47 +771,6 @@ impl PublishParametersBuilder {
             self.layer_info = Some(self.create_default_layer_info());
         }
 
-        // Add coordinate fields to the field list if they're specified
-        if let (Some(ref lon_field), Some(ref lat_field)) =
-            (&self.longitude_field_name, &self.latitude_field_name)
-        {
-            if let Some(ref mut layer_info) = self.layer_info {
-                // Check if coordinate fields aren't already in the list
-                let has_lon = layer_info.fields.iter().any(|f| &f.name == lon_field);
-                let has_lat = layer_info.fields.iter().any(|f| &f.name == lat_field);
-
-                // Add longitude field if not present
-                if !has_lon {
-                    layer_info.fields.insert(
-                        0,
-                        Field {
-                            name: lon_field.clone(),
-                            type_field: "esriFieldTypeDouble".to_string(),
-                            alias: lon_field.clone(),
-                            location_type: Some("longitude".to_string()),
-                            sql_type: "sqlTypeDouble".to_string(),
-                            length: None,
-                        },
-                    );
-                }
-
-                // Add latitude field if not present
-                if !has_lat {
-                    layer_info.fields.insert(
-                        if has_lon { 1 } else { 0 },
-                        Field {
-                            name: lat_field.clone(),
-                            type_field: "esriFieldTypeDouble".to_string(),
-                            alias: lat_field.clone(),
-                            location_type: Some("latitude".to_string()),
-                            sql_type: "sqlTypeDouble".to_string(),
-                            length: None,
-                        },
-                    );
-                }
-            }
-        }
-
         // Build the attributes map for templates (all fields with null values)
         let mut attributes = HashMap::new();
         if let Some(ref layer_info) = self.layer_info {
@@ -784,7 +833,7 @@ mod tests {
     fn test_builder_with_additional_fields() {
         let builder = PublishParametersBuilder::new("TestService")
             .set_coordinate_fields("Latitude", "Longitude")
-            .add_string_field("status")
+            .add_string_field("status", 256)
             .add_double_field("temperature");
 
         let json = builder.build();
