@@ -74,7 +74,7 @@ mod item_tests {
         let builder =
             arcgis_sharing_rs::builders::publish::PublishParametersBuilder::new(&service_name)
                 .set_coordinate_fields("Latitude", "Longitude")
-                .add_string_field("status")
+                .add_string_field("status", 256)
                 .add_double_field("temp_c")
                 .add_integer_field("id")
                 .add_date_field("timestamp")

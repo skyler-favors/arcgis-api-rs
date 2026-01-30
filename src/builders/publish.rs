@@ -386,7 +386,7 @@ impl PublishParametersBuilder {
     /// ```no_run
     /// # use arcgis_sharing_rs::builders::PublishParametersBuilder;
     /// let builder = PublishParametersBuilder::new("MyService")
-    ///     .add_string_field("status");
+    ///     .add_string_field("status", 256);
     /// ```
     pub fn add_string_field(self, name: impl Into<String>, length: i64) -> Self {
         self.add_field(name, "esriFieldTypeString", None, None, Some(length))

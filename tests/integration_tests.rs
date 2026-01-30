@@ -12,6 +12,46 @@ mod integration_tests {
 
     use super::*;
 
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn test_client_async() {
+        Lazy::force(&SETUP);
+
+        let task0 = tokio::spawn(async move {
+            let client = arcgis_sharing_rs::instance();
+            let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            assert_eq!(item.id, item_id);
+            assert_eq!(item.title, "Cars");
+            println!("task 0 done");
+        });
+        let task1 = tokio::spawn(async move {
+            let client = arcgis_sharing_rs::instance();
+            let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            assert_eq!(item.id, item_id);
+            assert_eq!(item.title, "Cars");
+            println!("task 1 done");
+        });
+        let task2 = tokio::spawn(async move {
+            let client = arcgis_sharing_rs::instance();
+            let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            assert_eq!(item.id, item_id);
+            assert_eq!(item.title, "Cars");
+            println!("task 2 done");
+        });
+        let task3 = tokio::spawn(async move {
+            let client = arcgis_sharing_rs::instance();
+            let item_id = std::env::var("TEST_ITEM_ID").unwrap();
+            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            assert_eq!(item.id, item_id);
+            assert_eq!(item.title, "Cars");
+            println!("task 3 done");
+        });
+        // Await all tasks
+        let _ = tokio::try_join!(task0, task1, task2, task3).unwrap();
+    }
+
     #[tokio::test]
     async fn test_portal_url_and_token() {
         Lazy::force(&SETUP);
@@ -56,7 +96,7 @@ mod integration_tests {
         let builder =
             arcgis_sharing_rs::builders::publish::PublishParametersBuilder::new(&service_item_name)
                 .set_coordinate_fields("Latitude", "Longitude")
-                .add_string_field("status")
+                .add_string_field("status", 256)
                 .add_double_field("temp_c")
                 .add_integer_field("id")
                 .add_date_field("timestamp")
