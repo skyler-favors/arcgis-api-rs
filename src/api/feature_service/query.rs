@@ -135,6 +135,41 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
         self
     }
 
+    pub fn set_return_distinct_values(mut self, return_distinct_values: bool) -> Self {
+        self.return_distinct_values = Some(return_distinct_values);
+        self
+    }
+
+    pub fn set_return_ids_only(mut self, return_ids_only: bool) -> Self {
+        self.return_ids_only = Some(return_ids_only);
+        self
+    }
+
+    pub fn set_return_extent_only(mut self, return_extent_only: bool) -> Self {
+        self.return_extent_only = Some(return_extent_only);
+        self
+    }
+
+    pub fn set_return_z(mut self, return_z: bool) -> Self {
+        self.return_z = Some(return_z);
+        self
+    }
+
+    pub fn set_return_m(mut self, return_m: bool) -> Self {
+        self.return_m = Some(return_m);
+        self
+    }
+
+    pub fn set_return_true_curves(mut self, return_true_curves: bool) -> Self {
+        self.return_true_curves = Some(return_true_curves);
+        self
+    }
+
+    pub fn set_return_centroid(mut self, return_centroid: bool) -> Self {
+        self.return_centroid = Some(return_centroid);
+        self
+    }
+
     pub async fn send(&self) -> Result<FeatureServiceQueryResponse> {
         let url = format!("{}/query", self.handler.url);
         self.handler.client.get(url, Some(self)).await

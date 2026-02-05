@@ -129,4 +129,41 @@ mod feature_service_tests {
             .iter()
             .for_each(|edit| assert!(edit.success))
     }
+
+    #[tokio::test]
+    async fn test_feature_service_unique_values() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE2")
+            .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
+
+        let response = client
+            .feature_service(fs_url)
+            .query()
+            .set_where("1=1")
+            .set_out_fields("industry")
+            .set_return_distinct_values(true)
+            .send()
+            .await
+            .unwrap();
+
+        let features = response.features.unwrap();
+
+        assert!(!features.is_empty());
+
+        let unique_values: Vec<String> = features
+            .iter()
+            .map(|feature| {
+                feature
+                    .attributes
+                    .get("industry")
+                    .unwrap()
+                    .as_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .collect();
+
+        println!("Unique values: {:?}", unique_values);
+    }
 }
