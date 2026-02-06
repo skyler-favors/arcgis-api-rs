@@ -20,6 +20,13 @@ impl<T: DeserializeOwned> FromResponse for T {
             .map(|start| &bytes[start..])
             .unwrap_or(&[]);
 
+        tracing::debug!(
+            original_len = bytes.len(),
+            trimmed_len = trimmed.len(),
+            trimmed_preview = %String::from_utf8_lossy(&trimmed[..trimmed.len().min(200)]),
+            "Deserializing response"
+        );
+
         if trimmed.is_empty() {
             // Deserialize null for empty responses
             let de = &mut serde_json::Deserializer::from_str("null");
@@ -30,7 +37,8 @@ impl<T: DeserializeOwned> FromResponse for T {
         }
 
         // Use serde_path_to_error for better debugging
-        let de = &mut serde_json::Deserializer::from_slice(&bytes);
+        // FIX: Use trimmed instead of bytes to properly handle leading whitespace
+        let de = &mut serde_json::Deserializer::from_slice(trimmed);
 
         serde_path_to_error::deserialize(de).map_err(|e| Error::Json {
             source: e,

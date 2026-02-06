@@ -57,7 +57,22 @@ struct ArcgisErrorResponse {
 
 /// Maps an ArcGIS error response to an Error if it is one.
 async fn map_arcgis_error(response: reqwest::Response) -> Result<Bytes> {
+    let status = response.status();
+    let content_type = response
+        .headers()
+        .get(http::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .map(String::from);
+    
     let body = response.bytes().await.context(ReqwestSnafu)?;
+    
+    tracing::debug!(
+        status = %status,
+        content_type = ?content_type,
+        body_len = body.len(),
+        body_preview = %String::from_utf8_lossy(&body[..body.len().min(500)]),
+        "Received HTTP response"
+    );
 
     match serde_json::from_slice(body.as_ref()) {
         Ok(ArcgisErrorBody { error }) => Err(Error::Arcgis {
@@ -337,8 +352,12 @@ impl ArcGISSharingClient {
         // append f=json to the url
         request.url_mut().query_pairs_mut().append_pair("f", "json");
 
+        tracing::debug!(url = %request.url(), method = %request.method(), "Sending request");
+
         // send request
         let response = self.client.execute(request).await.context(ReqwestSnafu)?;
+
+        tracing::debug!(status = %response.status(), "Received response");
 
         let status = response.status();
         if StatusCode::UNAUTHORIZED == status {
