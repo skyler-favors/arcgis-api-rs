@@ -418,9 +418,9 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
         self
     }
 
-    /// Returns true if multipart encoding is needed (when file content is present)
+    /// Returns true if multipart encoding is needed (when file or text content is present)
     fn needs_multipart(&self) -> bool {
-        self.file.is_some()
+        self.file.is_some() || self.text.is_some()
     }
 
     /// Convert builder fields to multipart form data
