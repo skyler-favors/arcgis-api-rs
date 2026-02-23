@@ -9,6 +9,7 @@ use crate::{
 };
 
 use bytes::Bytes;
+use chrono::Utc;
 use http::{HeaderValue, StatusCode};
 use once_cell::sync::Lazy;
 use reqwest::RequestBuilder;
@@ -294,10 +295,10 @@ impl ArcGISSharingClient {
                 });
             };
 
-        let (token, _ttl) = auth.fetch_token(self.portal.as_str(), &self.client).await?;
+        let (token, ttl) = auth.fetch_token(self.portal.as_str(), &self.client).await?;
 
-        // TODO: convert duration to chrono datatime
-        cached_token.set(token.clone(), None);
+        let expiration = Utc::now() + chrono::Duration::from_std(ttl).unwrap_or_default();
+        cached_token.set(token.clone(), Some(expiration));
 
         Ok(token)
     }
