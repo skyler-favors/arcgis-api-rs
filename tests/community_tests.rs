@@ -39,4 +39,18 @@ mod community_tests {
         let group_id = create_group(&client).await;
         delete_group(&client, &group_id).await;
     }
+
+    #[tokio::test]
+    async fn test_community_self() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let response = client
+            .community_self()
+            .send()
+            .await
+            .expect("Failed to fetch community self");
+
+        assert!(!response.username.is_empty(), "username should not be empty");
+    }
 }

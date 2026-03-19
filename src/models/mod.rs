@@ -4,6 +4,7 @@ pub mod group;
 pub mod item;
 pub mod portal;
 pub mod search;
+pub mod user;
 pub mod webmap;
 
 pub use auth::*;
@@ -12,4 +13,5 @@ pub use group::*;
 pub use item::*;
 pub use portal::*;
 pub use search::*;
+pub use user::*;
 pub use webmap::*;

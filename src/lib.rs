@@ -589,6 +589,10 @@ impl ArcGISSharingClient {
         PortalsHandler::new(self)
     }
 
+    pub fn community_self(&self) -> CommunitySelfBuilder<'_> {
+        CommunitySelfBuilder::new(self)
+    }
+
     /// Returns a [`TokenizedClient`] that authenticates all requests with the
     /// given token, overriding any auth configured on this client.
     ///
@@ -670,5 +674,11 @@ impl<'a> TokenizedClient<'a> {
 
     pub fn portals(&self) -> PortalsHandler<'_> {
         PortalsHandler::new_with_token(self.client, self.token.clone())
+    }
+
+    pub fn community_self(&self) -> CommunitySelfBuilder<'_> {
+        let mut builder = CommunitySelfBuilder::new(self.client);
+        builder.token = Some(self.token.clone());
+        builder
     }
 }
