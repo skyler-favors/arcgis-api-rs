@@ -64,9 +64,9 @@ async fn map_arcgis_error(response: reqwest::Response) -> Result<Bytes> {
         .get(http::header::CONTENT_TYPE)
         .and_then(|v| v.to_str().ok())
         .map(String::from);
-    
+
     let body = response.bytes().await.context(ReqwestSnafu)?;
-    
+
     tracing::debug!(
         status = %status,
         content_type = ?content_type,
@@ -333,6 +333,14 @@ impl ArcGISSharingClient {
                 header.set_sensitive(true);
                 Some(header)
             }
+            AuthState::APIKey { ref token } => {
+                let mut header =
+                    HeaderValue::from_str(format!("Bearer {}", token.expose_secret()).as_str())
+                        .map_err(http::Error::from) // How does this work?
+                        .context(HttpSnafu)?;
+                header.set_sensitive(true);
+                Some(header)
+            }
             _ => None,
         };
 
@@ -403,9 +411,15 @@ impl ArcGISSharingClientBuilder {
         self
     }
 
+    pub fn api_key(mut self, token: impl Into<SecretString>) -> Self {
+        self.auth = Auth::APIKey(token.into());
+        self
+    }
+
     pub fn build(self) -> ArcGISSharingClient {
         let auth = match self.auth {
             Auth::None => AuthState::None,
+            Auth::APIKey(token) => AuthState::APIKey { token },
             Auth::LegacyToken(auth) => AuthState::LegacyToken {
                 auth: auth.clone(),
                 token: CachedToken::default(),
@@ -455,6 +469,9 @@ impl ArcGISSharingClient {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
                 }
+                AuthState::APIKey { .. } => {
+                    todo!("Fetch user's info from token")
+                }
                 _ => None,
             },
         }
@@ -475,6 +492,9 @@ impl ArcGISSharingClient {
             None => match self.auth_state {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
+                }
+                AuthState::APIKey { .. } => {
+                    todo!("Fetch user's info from token")
                 }
                 _ => None,
             },

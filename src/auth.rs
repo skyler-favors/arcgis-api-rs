@@ -47,7 +47,12 @@ pub enum AuthState {
     /// Use Case: Static apps, IoT devices, or simple web maps where you don't want to implement a full OAuth login flow.
     /// Duration: Up to 1 year.
     /// Legacy Note: If you are using "Legacy API Keys" (created before June 2024), these are set to expire by May 2026. You should migrate to the new "API Key Credentials" items.
-    APIKey,
+    APIKey {
+        token: SecretString,
+        //auth: LegacyToken,
+        //token: CachedToken,
+        //refresh_mutex: Arc<tokio::sync::Mutex<()>>,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -132,6 +137,7 @@ impl fmt::Debug for AuthState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AuthState::None => write!(f, "None"),
+            AuthState::APIKey { token } => f.debug_struct("APIKey").field("token", token).finish(),
             AuthState::LegacyToken { auth, token, .. } => f
                 .debug_struct("LegacyToken")
                 .field("auth", auth)
@@ -147,6 +153,7 @@ pub enum Auth {
     #[default]
     None,
     LegacyToken(LegacyToken),
+    APIKey(SecretString),
 }
 
 #[derive(Debug, Clone)]
