@@ -11,6 +11,7 @@ use crate::{
     models::{Group, GroupSearchResponse},
     ArcGISSharingClient,
 };
+use secrecy::SecretString;
 
 /// Builder for constructing ArcGIS group search queries.
 ///
@@ -67,6 +68,9 @@ pub struct GroupSearchBuilder<'a> {
 
     #[serde(skip)]
     page_fetch_delay: Duration,
+
+    #[serde(skip)]
+    pub(crate) token: Option<SecretString>,
 
     // The query string used to search groups.
     // See Group Search reference for advanced options.
@@ -188,6 +192,7 @@ pub struct GroupSearchBuilder<'a> {
 pub struct GroupSearchStream<'a> {
     client: &'a ArcGISSharingClient,
     params: GroupSearchParams,
+    token: Option<SecretString>,
     buffer: VecDeque<Group>,
     current_start: i64,
     next_start: i64,
@@ -231,10 +236,12 @@ impl<'a> GroupSearchStream<'a> {
         params: GroupSearchParams,
         max_pages: usize,
         page_fetch_delay: Duration,
+        token: Option<SecretString>,
     ) -> Self {
         Self {
             client,
             params,
+            token,
             buffer: VecDeque::new(),
             current_start: 1,
             next_start: 1,
@@ -258,13 +265,14 @@ impl<'a> GroupSearchStream<'a> {
 
         let client = self.client;
         let portal = client.portal.clone();
+        let token = self.token.clone();
 
         self.fetch_future = Some(Box::pin(async move {
             let url = portal
                 .join("sharing/rest/community/groups")
                 .context(UrlParseSnafu)?;
 
-            client.get(url, Some(&params)).await
+            client.get_with_token(url, Some(&params), token.as_ref()).await
         }));
     }
 
@@ -369,6 +377,7 @@ impl<'a> GroupSearchBuilder<'a> {
             client,
             max_pages: usize::MAX, // Default to unlimited
             page_fetch_delay: Duration::from_millis(100), // Default 0.1 second delay
+            token: None,
             q: None,
             bbox: None,
             filter: None,
@@ -711,6 +720,7 @@ impl<'a> GroupSearchBuilder<'a> {
             self.to_params(),
             self.max_pages,
             self.page_fetch_delay,
+            self.token,
         )
     }
 }

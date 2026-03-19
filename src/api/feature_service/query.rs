@@ -172,6 +172,9 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
 
     pub async fn send(&self) -> Result<FeatureServiceQueryResponse> {
         let url = format!("{}/query", self.handler.url);
-        self.handler.client.get(url, Some(self)).await
+        self.handler
+            .client
+            .get_with_token(url, Some(self), self.handler.token.as_ref())
+            .await
     }
 }

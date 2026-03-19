@@ -184,6 +184,9 @@ impl<'a, 'r> FeatureServiceApplyEditsBuilder<'a, 'r> {
     /// Execute the apply edits request
     pub async fn send(&self) -> Result<ApplyEditsResponse> {
         let url = format!("{}/applyEdits", self.handler.url);
-        self.handler.client.post(url, Some(self), None).await
+        self.handler
+            .client
+            .post_with_token(url, Some(self), None, self.handler.token.as_ref())
+            .await
     }
 }

@@ -10,11 +10,13 @@ use crate::{
     models::{Item, ItemInfoResult},
     ArcGISSharingClient,
 };
+use secrecy::SecretString;
 
 pub struct ItemHandler<'a> {
-    client: &'a ArcGISSharingClient,
-    username: String,
-    id: String,
+    pub(crate) client: &'a ArcGISSharingClient,
+    pub(crate) username: String,
+    pub(crate) id: String,
+    pub(crate) token: Option<SecretString>,
 }
 
 impl<'a> ItemHandler<'a> {
@@ -23,6 +25,21 @@ impl<'a> ItemHandler<'a> {
             client,
             username,
             id,
+            token: None,
+        }
+    }
+
+    pub(crate) fn new_with_token(
+        client: &'a ArcGISSharingClient,
+        username: String,
+        id: String,
+        token: SecretString,
+    ) -> Self {
+        Self {
+            client,
+            username,
+            id,
+            token: Some(token),
         }
     }
 
@@ -36,7 +53,10 @@ impl<'a> ItemHandler<'a> {
             ))
             .context(UrlParseSnafu)?;
 
-        let response: ItemInfoResult = self.client.get(url, None::<&()>).await?;
+        let response: ItemInfoResult = self
+            .client
+            .get_with_token(url, None::<&()>, self.token.as_ref())
+            .await?;
         Ok(response.item)
     }
 

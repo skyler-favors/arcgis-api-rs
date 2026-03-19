@@ -11,6 +11,7 @@ use crate::{
     models::{Item, SearchResponse},
     ArcGISSharingClient,
 };
+use secrecy::SecretString;
 
 /// Builder for constructing ArcGIS search queries.
 ///
@@ -76,6 +77,9 @@ pub struct SearchBuilder<'a> {
 
     #[serde(skip)]
     page_fetch_delay: Duration,
+
+    #[serde(skip)]
+    pub(crate) token: Option<SecretString>,
 
     // The query string used to search.
     // See Search reference for advanced options.
@@ -255,6 +259,7 @@ pub struct SearchBuilder<'a> {
 pub struct SearchStream<'a> {
     client: &'a ArcGISSharingClient,
     params: SearchParams,
+    token: Option<SecretString>,
     buffer: VecDeque<Item>,
     current_start: i64,
     next_start: i64,
@@ -314,10 +319,12 @@ impl<'a> SearchStream<'a> {
         params: SearchParams,
         max_pages: usize,
         page_fetch_delay: Duration,
+        token: Option<SecretString>,
     ) -> Self {
         Self {
             client,
             params,
+            token,
             buffer: VecDeque::new(),
             current_start: 1,
             next_start: 1,
@@ -341,11 +348,12 @@ impl<'a> SearchStream<'a> {
 
         let client = self.client;
         let portal = client.portal.clone();
+        let token = self.token.clone();
 
         self.fetch_future = Some(Box::pin(async move {
             let url = portal.join("sharing/rest/search").context(UrlParseSnafu)?;
 
-            client.get(url, Some(&params)).await
+            client.get_with_token(url, Some(&params), token.as_ref()).await
         }));
     }
 
@@ -450,6 +458,7 @@ impl<'a> SearchBuilder<'a> {
             client,
             max_pages: usize::MAX, // Default to unlimited
             page_fetch_delay: Duration::from_millis(100), // Default 0.1 second delay
+            token: None,
             q: None,
             bbox: None,
             filter: None,
@@ -978,6 +987,7 @@ impl<'a> SearchBuilder<'a> {
             self.to_params(),
             self.max_pages,
             self.page_fetch_delay,
+            self.token,
         )
     }
 }

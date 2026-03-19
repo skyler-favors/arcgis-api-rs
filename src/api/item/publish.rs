@@ -96,6 +96,9 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         let form = self.to_multipart()?;
 
         // POST with params as the body (not query parameters)
-        self.handler.client.post_multipart(url, form).await
+        self.handler
+            .client
+            .post_multipart_with_token(url, form, self.handler.token.as_ref())
+            .await
     }
 }

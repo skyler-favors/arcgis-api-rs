@@ -474,10 +474,16 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
         if self.needs_multipart() {
             // Use multipart encoding for file uploads
             let form = self.to_multipart()?;
-            self.handler.client.post_multipart(url.as_str(), form).await
+            self.handler
+                .client
+                .post_multipart_with_token(url.as_str(), form, self.handler.token.as_ref())
+                .await
         } else {
             // Use standard form encoding for non-file requests
-            self.handler.client.post(url, Some(self), None).await
+            self.handler
+                .client
+                .post_with_token(url, Some(self), None, self.handler.token.as_ref())
+                .await
         }
     }
 }

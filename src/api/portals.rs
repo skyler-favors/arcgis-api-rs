@@ -1,3 +1,4 @@
+use secrecy::SecretString;
 use serde::Serialize;
 use snafu::ResultExt;
 
@@ -5,12 +6,17 @@ use crate::{error::Result, error::UrlParseSnafu, models::*, ArcGISSharingClient}
 
 /// Handler for portal-related operations
 pub struct PortalsHandler<'a> {
-    client: &'a ArcGISSharingClient,
+    pub(crate) client: &'a ArcGISSharingClient,
+    pub(crate) token: Option<SecretString>,
 }
 
 impl<'a> PortalsHandler<'a> {
     pub(crate) fn new(client: &'a ArcGISSharingClient) -> Self {
-        Self { client }
+        Self { client, token: None }
+    }
+
+    pub(crate) fn new_with_token(client: &'a ArcGISSharingClient, token: SecretString) -> Self {
+        Self { client, token: Some(token) }
     }
 
     pub fn self_info(&self) -> PortalsSelfBuilder<'_, '_> {
@@ -39,6 +45,9 @@ impl<'a, 'r> PortalsSelfBuilder<'a, 'r> {
             .join("sharing/rest/portals/self")
             .context(UrlParseSnafu)?;
 
-        self.handler.client.get(url, None::<&()>).await
+        self.handler
+            .client
+            .get_with_token(url, None::<&()>, self.handler.token.as_ref())
+            .await
     }
 }
