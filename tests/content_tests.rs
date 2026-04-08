@@ -156,4 +156,24 @@ mod content_tests {
         // Verify the response contains publish parameters
         assert!(!response.publish_parameters.is_null());
     }
+
+    #[tokio::test]
+    async fn test_add_storymap_item() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let title = format!("test-storymap-{}", uuid);
+
+        let response = client
+            .content(None::<String>)
+            .add_item()
+            .set_type("StoryMap")
+            .title(title)
+            .send()
+            .await
+            .unwrap();
+
+        assert!(response.success);
+    }
 }
