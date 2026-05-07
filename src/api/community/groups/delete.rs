@@ -32,7 +32,7 @@ impl<'a, 'r> DeleteGroupsBuilder<'a, 'r> {
 
         handler
             .client
-            .post_with_token(url, None::<&()>, None, handler.token.as_ref())
+            .post(url, None::<&()>, None)
             .await
     }
 }

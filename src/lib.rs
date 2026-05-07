@@ -307,14 +307,6 @@ impl ArcGISSharingClient {
         self.execute_inner(request, None).await
     }
 
-    pub(crate) async fn execute_with_token(
-        &self,
-        request: reqwest::Request,
-        token: Option<&SecretString>,
-    ) -> Result<reqwest::Response> {
-        self.execute_inner(request, token).await
-    }
-
     async fn execute_inner(
         &self,
         mut request: reqwest::Request,
@@ -403,57 +395,6 @@ impl ArcGISSharingClient {
         Ok(response)
     }
 
-    /// Send a `GET` request with an optional per-request token override.
-    pub(crate) async fn get_with_token<R, A, P>(
-        &self,
-        route: A,
-        parameters: Option<&P>,
-        token: Option<&SecretString>,
-    ) -> Result<R>
-    where
-        A: AsRef<str>,
-        P: Serialize + ?Sized,
-        R: FromResponse,
-    {
-        let url = self.parameterized_uri(route, parameters)?;
-        let builder = self.client.get(url);
-        let request = self.build_request(builder, None::<&()>)?;
-        let response = self.execute_with_token(request, token).await?;
-        R::from_response(map_arcgis_error(response).await?).await
-    }
-
-    /// Send a `POST` request with an optional per-request token override.
-    pub(crate) async fn post_with_token<P: Serialize + ?Sized, R: FromResponse>(
-        &self,
-        route: impl AsRef<str>,
-        parameters: Option<&P>,
-        body: Option<&P>,
-        token: Option<&SecretString>,
-    ) -> Result<R> {
-        let url = self.parameterized_uri(route, parameters)?;
-        let builder = self.client.post(url);
-        let request = self.build_request(builder, body)?;
-        let response = self.execute_with_token(request, token).await?;
-        R::from_response(map_arcgis_error(response).await?).await
-    }
-
-    /// Send a `POST` multipart request with an optional per-request token override.
-    pub(crate) async fn post_multipart_with_token<R: FromResponse>(
-        &self,
-        route: impl AsRef<str>,
-        form: reqwest::multipart::Form,
-        token: Option<&SecretString>,
-    ) -> Result<R> {
-        let url = self.parameterized_uri(route, None::<&()>)?;
-        let request = self
-            .client
-            .post(url)
-            .multipart(form)
-            .build()
-            .context(ReqwestSnafu)?;
-        let response = self.execute_with_token(request, token).await?;
-        R::from_response(map_arcgis_error(response).await?).await
-    }
 }
 
 #[derive(Default)]
@@ -593,12 +534,13 @@ impl ArcGISSharingClient {
         CommunitySelfBuilder::new(self)
     }
 
-    /// Returns a [`TokenizedClient`] that authenticates all requests with the
-    /// given token, overriding any auth configured on this client.
+    /// Returns a new [`ArcGISSharingClient`] that authenticates all requests
+    /// with the given token, overriding any auth configured on this client.
     ///
     /// This is the recommended way to supply per-request credentials when
     /// `ArcGISSharingClient` is shared across multiple users (e.g. on a web
     /// server) and you cannot store auth state on the client itself.
+    /// `reqwest::Client` is Arc-backed, so the clone is cheap.
     ///
     /// # Example
     /// ```no_run
@@ -606,79 +548,20 @@ impl ArcGISSharingClient {
     /// # async fn example(client: &ArcGISSharingClient) {
     /// let token = "my_token".to_string();
     /// let response = client
-    ///     .token(token)
+    ///     .with_token(token)
     ///     .feature_service("https://...")
     ///     .info()
     ///     .await
     ///     .unwrap();
     /// # }
     /// ```
-    pub fn token(&self, token: impl Into<SecretString>) -> TokenizedClient<'_> {
-        TokenizedClient {
-            client: self,
-            token: token.into(),
+    pub fn with_token(&self, token: impl Into<SecretString>) -> ArcGISSharingClient {
+        ArcGISSharingClient {
+            client: self.client.clone(),
+            portal: self.portal.clone(),
+            auth_state: AuthState::APIKey {
+                token: token.into(),
+            },
         }
-    }
-}
-
-/// A short-lived wrapper around [`ArcGISSharingClient`] that injects a
-/// per-request token into every API call.
-///
-/// Obtain one by calling [`ArcGISSharingClient::token`].
-pub struct TokenizedClient<'a> {
-    client: &'a ArcGISSharingClient,
-    token: SecretString,
-}
-
-impl<'a> TokenizedClient<'a> {
-    pub fn create_group(&self) -> CreateGroupHandler<'_> {
-        CreateGroupHandler::new_with_token(self.client, self.token.clone())
-    }
-
-    pub fn groups(&self, id: impl Into<String>) -> GroupsHandler<'_> {
-        GroupsHandler::new_with_token(self.client, id.into(), self.token.clone())
-    }
-
-    pub fn search_groups(&self) -> GroupSearchBuilder<'_> {
-        let mut builder = GroupSearchBuilder::new(self.client);
-        builder.token = Some(self.token.clone());
-        builder
-    }
-
-    pub fn feature_service(&self, url: impl Into<String>) -> FeatureServiceHandler<'_> {
-        FeatureServiceHandler::new_with_token(self.client, url.into(), self.token.clone())
-    }
-
-    pub fn content(&self, username: impl Into<String>) -> ContentHandler<'_> {
-        ContentHandler::new_with_token(self.client, username.into(), self.token.clone())
-    }
-
-    pub fn item(
-        &self,
-        username: impl Into<String>,
-        id: impl Into<String>,
-    ) -> ItemHandler<'_> {
-        ItemHandler::new_with_token(
-            self.client,
-            username.into(),
-            id.into(),
-            self.token.clone(),
-        )
-    }
-
-    pub fn search(&self) -> SearchBuilder<'_> {
-        let mut builder = SearchBuilder::new(self.client);
-        builder.token = Some(self.token.clone());
-        builder
-    }
-
-    pub fn portals(&self) -> PortalsHandler<'_> {
-        PortalsHandler::new_with_token(self.client, self.token.clone())
-    }
-
-    pub fn community_self(&self) -> CommunitySelfBuilder<'_> {
-        let mut builder = CommunitySelfBuilder::new(self.client);
-        builder.token = Some(self.token.clone());
-        builder
     }
 }

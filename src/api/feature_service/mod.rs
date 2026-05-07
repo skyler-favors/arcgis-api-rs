@@ -12,12 +12,10 @@ use crate::{
     models::FeatureServiceInfo,
     ArcGISSharingClient,
 };
-use secrecy::SecretString;
 
 pub struct FeatureServiceHandler<'a> {
     pub(crate) client: &'a ArcGISSharingClient,
     pub(crate) url: Url,
-    pub(crate) token: Option<SecretString>,
 }
 
 impl<'a> FeatureServiceHandler<'a> {
@@ -26,21 +24,12 @@ impl<'a> FeatureServiceHandler<'a> {
         // We want to panic early if the url is invalid
         let url = Url::parse(&url.into()).context(UrlParseSnafu).unwrap();
 
-        Self { client, url, token: None }
-    }
-
-    pub(crate) fn new_with_token(
-        client: &'a ArcGISSharingClient,
-        url: impl Into<String>,
-        token: SecretString,
-    ) -> Self {
-        let url = Url::parse(&url.into()).context(UrlParseSnafu).unwrap();
-        Self { client, url, token: Some(token) }
+        Self { client, url }
     }
 
     pub async fn info(&self) -> Result<FeatureServiceInfo> {
         self.client
-            .get_with_token(self.url.as_str(), None::<&()>, self.token.as_ref())
+            .get(self.url.as_str(), None::<&()>)
             .await
     }
 

@@ -24,7 +24,7 @@ mod feature_service_tests {
         let token = std::env::var("TEST_TOKEN").expect("Failed to find env variable 'TEST_TOKEN'");
 
         let response = client
-            .token(token)
+            .with_token(token)
             .feature_service(fs_url)
             .info()
             .await

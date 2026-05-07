@@ -476,13 +476,13 @@ impl<'a, 'r> AddItemBuilder<'a, 'r> {
             let form = self.to_multipart()?;
             self.handler
                 .client
-                .post_multipart_with_token(url.as_str(), form, self.handler.token.as_ref())
+                .post_multipart(url.as_str(), form)
                 .await
         } else {
             // Use standard form encoding for non-file requests
             self.handler
                 .client
-                .post_with_token(url, Some(self), None, self.handler.token.as_ref())
+                .post(url, Some(self), None)
                 .await
         }
     }

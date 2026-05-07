@@ -2,7 +2,6 @@ use crate::api::serialize_comma_separated;
 use crate::error::{Result, UrlParseSnafu};
 use crate::models::*;
 use crate::ArcGISSharingClient;
-use secrecy::SecretString;
 use serde::Serialize;
 use snafu::ResultExt;
 
@@ -10,16 +9,11 @@ use snafu::ResultExt;
 
 pub struct CreateGroupHandler<'a> {
     pub(crate) client: &'a ArcGISSharingClient,
-    pub(crate) token: Option<SecretString>,
 }
 
 impl<'a> CreateGroupHandler<'a> {
     pub(crate) fn new(client: &'a ArcGISSharingClient) -> Self {
-        Self { client, token: None }
-    }
-
-    pub(crate) fn new_with_token(client: &'a ArcGISSharingClient, token: SecretString) -> Self {
-        Self { client, token: Some(token) }
+        Self { client }
     }
 
     pub fn create(&self, title: impl Into<String>) -> CreateGroupBuilder<'_, '_> {
@@ -219,7 +213,7 @@ impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
 
         self.handler
             .client
-            .post_with_token(url, Some(&self), None, self.handler.token.as_ref())
+            .post(url, Some(&self), None)
             .await
     }
 }

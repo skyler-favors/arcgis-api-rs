@@ -186,7 +186,7 @@ impl<'a, 'r> FeatureServiceApplyEditsBuilder<'a, 'r> {
         let url = format!("{}/applyEdits", self.handler.url);
         self.handler
             .client
-            .post_with_token(url, Some(self), None, self.handler.token.as_ref())
+            .post(url, Some(self), None)
             .await
     }
 }

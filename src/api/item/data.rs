@@ -26,7 +26,7 @@ impl<'a, 'r> ItemDataBuilder<'a, 'r> {
 
         self.handler
             .client
-            .get_with_token(url, None::<&()>, self.handler.token.as_ref())
+            .get(url, None::<&()>)
             .await
     }
 }

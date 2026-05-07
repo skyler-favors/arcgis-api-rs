@@ -98,7 +98,7 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         // POST with params as the body (not query parameters)
         self.handler
             .client
-            .post_multipart_with_token(url, form, self.handler.token.as_ref())
+            .post_multipart(url, form)
             .await
     }
 }

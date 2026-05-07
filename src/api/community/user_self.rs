@@ -1,4 +1,3 @@
-use secrecy::SecretString;
 use serde::Serialize;
 use snafu::ResultExt;
 
@@ -8,13 +7,11 @@ use crate::{error::Result, error::UrlParseSnafu, models::*, ArcGISSharingClient}
 pub struct CommunitySelfBuilder<'a> {
     #[serde(skip)]
     client: &'a ArcGISSharingClient,
-    #[serde(skip)]
-    pub(crate) token: Option<SecretString>,
 }
 
 impl<'a> CommunitySelfBuilder<'a> {
     pub fn new(client: &'a ArcGISSharingClient) -> Self {
-        Self { client, token: None }
+        Self { client }
     }
 
     pub async fn send(&self) -> Result<UserSelfResponse> {
@@ -25,7 +22,7 @@ impl<'a> CommunitySelfBuilder<'a> {
             .context(UrlParseSnafu)?;
 
         self.client
-            .get_with_token(url, None::<&()>, self.token.as_ref())
+            .get(url, None::<&()>)
             .await
     }
 }
