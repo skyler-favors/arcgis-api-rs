@@ -37,6 +37,15 @@ pub struct UpdateItemResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct AddResourcesResponse {
+    pub success: bool,
+    pub item_id: String,
+    pub owner: String,
+    pub folder: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AnalyzeResponse {
     pub publish_parameters: serde_json::Value,
     #[serde(skip_serializing_if = "Option::is_none")]

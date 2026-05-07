@@ -175,5 +175,30 @@ mod content_tests {
             .unwrap();
 
         assert!(response.success);
+
+        let test_json = r#"{"root":"n-K7rBG8","nodes":{"n-LBXaQ6":{"type":"storycover","data":{"type":"minimal","title":"Test 123","summary":"","byline":"Skyler Favors","titlePanelHorizontalPosition":"start","titlePanelVerticalPosition":"top","titlePanelStyle":"gradient"}},"n-bhvO0m":{"type":"navigation","data":{"links":[]},"config":{"isHidden":true}},"n-mjizQg":{"type":"webmap","data":{"map":"r-074d6ec084a649d698ec0cd1989aafdd","caption":"Customer_Dataset_Map","timeSlider":false}},"n-Z8oK9i":{"type":"text","data":{"text":"","type":"h4"}},"n-53sngv":{"type":"text","data":{"text":"","type":"paragraph"}},"n-7xpMhr":{"type":"attribution","data":{"content":"","attribution":""}},"n-sFabwy":{"type":"credits","children":["n-Z8oK9i","n-53sngv","n-7xpMhr"]},"n-K7rBG8":{"type":"story","data":{"storyTheme":"r-f1Ek7u"},"config":{"coverDate":"first-published"},"children":["n-LBXaQ6","n-bhvO0m","n-mjizQg","n-sFabwy"]}},"resources":{"r-074d6ec084a649d698ec0cd1989aafdd":{"type":"webmap","data":{"extent":{"spatialReference":{"latestWkid":3857,"wkid":102100},"xmin":-15669740.27531514,"ymin":1601764.2973055784,"xmax":-5592282.466200114,"ymax":7276449.2771955915},"center":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":-10631011.370757626,"y":4439106.787250585},"zoom":2,"viewpoint":{"rotation":0,"scale":73957190.9489445,"targetGeometry":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":-10631011.370757626,"y":4439106.787250585}},"mapLayers":[{"id":"layer-0","title":"Customer Locations","visible":true}],"itemId":"074d6ec084a649d698ec0cd1989aafdd","itemType":"Web Map","type":"default"}},"r-f1Ek7u":{"type":"story-theme","data":{"themeId":"summit","themeBaseVariableOverrides":{}}}}}"#;
+
+        let response2 = client
+            .item(None::<String>, &response.id)
+            .add_resources()
+            .file_name("published_data.json")
+            .file(test_json)
+            .access("private")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(response2.success);
+
+        let publish_url = client
+            .portal
+            .join(&format!("apps/storymaps/stories/{}/publish", response.id))
+            .unwrap()
+            .to_string();
+
+        let _response3: serde_json::Value = client
+            .post(publish_url, None::<&()>, None::<&()>)
+            .await
+            .unwrap();
     }
 }

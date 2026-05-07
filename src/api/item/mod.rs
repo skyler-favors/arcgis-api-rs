@@ -1,3 +1,4 @@
+mod add_resources;
 mod data;
 mod publish;
 mod update;
@@ -5,7 +6,10 @@ mod update;
 use snafu::ResultExt;
 
 use crate::{
-    api::item::{data::ItemDataBuilder, publish::PublishItemBuilder, update::UpdateItemBuilder},
+    api::item::{
+        add_resources::AddResourcesBuilder, data::ItemDataBuilder, publish::PublishItemBuilder,
+        update::UpdateItemBuilder,
+    },
     error::{Result, UrlParseSnafu},
     models::{Item, ItemInfoResult},
     ArcGISSharingClient,
@@ -70,5 +74,9 @@ impl<'a> ItemHandler<'a> {
 
     pub fn publish(&self) -> PublishItemBuilder<'_, '_> {
         PublishItemBuilder::new(self)
+    }
+
+    pub fn add_resources(&self) -> AddResourcesBuilder<'_, '_> {
+        AddResourcesBuilder::new(self)
     }
 }
