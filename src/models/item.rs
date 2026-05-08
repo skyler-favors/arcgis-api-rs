@@ -37,6 +37,13 @@ pub struct UpdateItemResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct DeleteItemResponse {
+    pub success: bool,
+    pub item_id: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AddResourcesResponse {
     pub success: bool,
     pub item_id: String,

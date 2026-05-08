@@ -147,6 +147,44 @@ mod item_tests {
     }
 
     #[tokio::test]
+    async fn test_delete_item() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let title = format!("test-delete-{}", uuid);
+        let filename = format!("{}.csv", uuid);
+        let test_csv = r#"id,name
+1,Item 1
+2,Item 2"#;
+
+        let add_response = client
+            .content(None::<String>)
+            .add_item()
+            .file(test_csv)
+            .set_type("CSV")
+            .title(&title)
+            .filename(&filename)
+            .send()
+            .await
+            .unwrap();
+
+        assert!(add_response.success);
+        println!("Added item with ID: {}", add_response.id);
+
+        let delete_response = client
+            .item(None::<String>, &add_response.id)
+            .delete()
+            .send()
+            .await
+            .unwrap();
+
+        assert!(delete_response.success);
+        assert_eq!(delete_response.item_id, add_response.id);
+        println!("Deleted item with ID: {}", delete_response.item_id);
+    }
+
+    #[tokio::test]
     async fn test_update_existing_item() {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
