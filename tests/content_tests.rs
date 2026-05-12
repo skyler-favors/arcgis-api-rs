@@ -5,6 +5,10 @@ use once_cell::sync::Lazy;
 
 #[serial_test::serial]
 mod content_tests {
+    use std::str::FromStr;
+
+    use url::Url;
+
     use super::*;
 
     #[tokio::test]
@@ -158,7 +162,7 @@ mod content_tests {
     }
 
     #[tokio::test]
-    async fn test_add_storymap_item() {
+    async fn test_add_resource_item() {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
@@ -176,12 +180,12 @@ mod content_tests {
 
         assert!(response.success);
 
-        let test_json = r#"{"root":"n-K7rBG8","nodes":{"n-LBXaQ6":{"type":"storycover","data":{"type":"minimal","title":"Test 123","summary":"","byline":"Skyler Favors","titlePanelHorizontalPosition":"start","titlePanelVerticalPosition":"top","titlePanelStyle":"gradient"}},"n-bhvO0m":{"type":"navigation","data":{"links":[]},"config":{"isHidden":true}},"n-mjizQg":{"type":"webmap","data":{"map":"r-074d6ec084a649d698ec0cd1989aafdd","caption":"Customer_Dataset_Map","timeSlider":false}},"n-Z8oK9i":{"type":"text","data":{"text":"","type":"h4"}},"n-53sngv":{"type":"text","data":{"text":"","type":"paragraph"}},"n-7xpMhr":{"type":"attribution","data":{"content":"","attribution":""}},"n-sFabwy":{"type":"credits","children":["n-Z8oK9i","n-53sngv","n-7xpMhr"]},"n-K7rBG8":{"type":"story","data":{"storyTheme":"r-f1Ek7u"},"config":{"coverDate":"first-published"},"children":["n-LBXaQ6","n-bhvO0m","n-mjizQg","n-sFabwy"]}},"resources":{"r-074d6ec084a649d698ec0cd1989aafdd":{"type":"webmap","data":{"extent":{"spatialReference":{"latestWkid":3857,"wkid":102100},"xmin":-15669740.27531514,"ymin":1601764.2973055784,"xmax":-5592282.466200114,"ymax":7276449.2771955915},"center":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":-10631011.370757626,"y":4439106.787250585},"zoom":2,"viewpoint":{"rotation":0,"scale":73957190.9489445,"targetGeometry":{"spatialReference":{"latestWkid":3857,"wkid":102100},"x":-10631011.370757626,"y":4439106.787250585}},"mapLayers":[{"id":"layer-0","title":"Customer Locations","visible":true}],"itemId":"074d6ec084a649d698ec0cd1989aafdd","itemType":"Web Map","type":"default"}},"r-f1Ek7u":{"type":"story-theme","data":{"themeId":"summit","themeBaseVariableOverrides":{}}}}}"#;
+        let test_json = r#"{"root":"n-LI0O6Y","nodes":{"n-Ejj8Sv":{"type":"storycover","data":{"type":"minimal","title":"helllo","summary":"","byline":"Skyler Favors","titlePanelHorizontalPosition":"start","titlePanelVerticalPosition":"top","titlePanelStyle":"gradient"}},"n-6ZqiAj":{"type":"navigation","data":{"links":[]},"config":{"isHidden":true}},"n-I3tLN5":{"type":"text","data":{"text":"","type":"h4"}},"n-i7vfmz":{"type":"text","data":{"text":"","type":"paragraph"}},"n-fw1A4v":{"type":"attribution","data":{"content":"","attribution":""}},"n-cxdAfh":{"type":"credits","children":["n-I3tLN5","n-i7vfmz","n-fw1A4v"]},"n-LI0O6Y":{"type":"story","data":{"storyTheme":"r-9u32J8"},"config":{"coverDate":"first-published"},"children":["n-Ejj8Sv","n-6ZqiAj","n-cxdAfh"]}},"resources":{"r-9u32J8":{"type":"story-theme","data":{"themeId":"summit","themeBaseVariableOverrides":{}}}}}"#;
 
         let response2 = client
             .item(None::<String>, &response.id)
             .add_resources()
-            .file_name("published_data.json")
+            .file_name("draft.json")
             .file(test_json)
             .access("private")
             .send()
@@ -190,15 +194,45 @@ mod content_tests {
 
         assert!(response2.success);
 
-        let publish_url = client
+        let response2 = client
+            .item(None::<String>, &response.id)
+            .add_resources()
+            .file_name("published_data.json")
+            .file(test_json)
+            .access("inherit")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(response2.success);
+
+        let app_url = client
             .portal
-            .join(&format!("apps/storymaps/stories/{}/publish", response.id))
+            .join(&format!("apps/storymaps/stories/{}", &response.id))
             .unwrap()
             .to_string();
 
-        let _response3: serde_json::Value = client
-            .post(publish_url, None::<&()>, None::<&()>)
+        let publish_url = &format!("{}/publish", app_url);
+
+        let update_response = client
+            .item(None::<String>, &response.id)
+            .update()
+            .url(app_url)
+            .text(test_json)
+            .send()
             .await
             .unwrap();
+        assert!(update_response.success);
+
+        let _response3 = client
+            ._post(Url::from_str(publish_url.as_str()).unwrap(), None::<&()>)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_read_resource() {
+        Lazy::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
     }
 }

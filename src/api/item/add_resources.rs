@@ -26,6 +26,9 @@ pub struct AddResourcesBuilder<'a, 'r> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     access: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    properties: Option<String>,
 }
 
 impl<'a, 'r> AddResourcesBuilder<'a, 'r> {
@@ -38,6 +41,7 @@ impl<'a, 'r> AddResourcesBuilder<'a, 'r> {
             text: None,
             archive: None,
             access: None,
+            properties: None,
         }
     }
 
@@ -68,6 +72,11 @@ impl<'a, 'r> AddResourcesBuilder<'a, 'r> {
 
     pub fn access(mut self, value: impl Into<String>) -> Self {
         self.access = Some(value.into());
+        self
+    }
+
+    pub fn properties(mut self, value: impl Into<String>) -> Self {
+        self.properties = Some(value.into());
         self
     }
 
@@ -118,15 +127,9 @@ impl<'a, 'r> AddResourcesBuilder<'a, 'r> {
 
         if self.needs_multipart() {
             let form = self.to_multipart()?;
-            self.handler
-                .client
-                .post_multipart(url.as_str(), form)
-                .await
+            self.handler.client.post_multipart(url.as_str(), form).await
         } else {
-            self.handler
-                .client
-                .post(url, Some(self), None)
-                .await
+            self.handler.client.post(url, Some(self), None).await
         }
     }
 }
