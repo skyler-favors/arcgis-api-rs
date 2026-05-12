@@ -73,3 +73,21 @@ pub struct WebMapDataJson {
     pub time_zone: String,
     pub version: String,
 }
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ListResourcesResponse {
+    pub total: i64,
+    pub start: i64,
+    pub num: i64,
+    pub next_start: i64,
+    pub resources: Vec<Resource>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Resource {
+    pub resource: String,
+    pub created: i64,
+    pub size: i64,
+}

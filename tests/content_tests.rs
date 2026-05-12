@@ -228,11 +228,14 @@ mod content_tests {
             ._post(Url::from_str(publish_url.as_str()).unwrap(), None::<&()>)
             .await
             .unwrap();
-    }
 
-    #[tokio::test]
-    async fn test_read_resource() {
-        Lazy::force(&SETUP);
-        let client = arcgis_sharing_rs::instance();
+        let list = client
+            .item(None::<String>, &response.id)
+            .resources()
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(list.resources.len(), 2);
     }
 }
