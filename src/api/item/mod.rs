@@ -1,6 +1,7 @@
 mod add_resources;
 mod data;
 mod delete;
+mod get_resource;
 mod publish;
 mod resources;
 mod update;
@@ -10,7 +11,8 @@ use snafu::ResultExt;
 use crate::{
     api::item::{
         add_resources::AddResourcesBuilder, data::ItemDataBuilder, delete::DeleteItemBuilder,
-        publish::PublishItemBuilder, resources::ResourcesBuilder, update::UpdateItemBuilder,
+        get_resource::GetResourceBuilder, publish::PublishItemBuilder, resources::ResourcesBuilder,
+        update::UpdateItemBuilder,
     },
     error::{Result, UrlParseSnafu},
     models::{Item, ItemInfoResult},
@@ -58,15 +60,19 @@ impl<'a> ItemHandler<'a> {
         PublishItemBuilder::new(self)
     }
 
-    pub fn add_resources(&self) -> AddResourcesBuilder<'_, '_> {
-        AddResourcesBuilder::new(self)
+    pub fn delete(&self) -> DeleteItemBuilder<'_, '_> {
+        DeleteItemBuilder::new(self)
     }
 
     pub fn resources(&self) -> ResourcesBuilder<'_, '_> {
         ResourcesBuilder::new(self)
     }
 
-    pub fn delete(&self) -> DeleteItemBuilder<'_, '_> {
-        DeleteItemBuilder::new(self)
+    pub fn add_resources(&self) -> AddResourcesBuilder<'_, '_> {
+        AddResourcesBuilder::new(self)
+    }
+
+    pub fn get_resource(&self) -> GetResourceBuilder<'_, '_> {
+        GetResourceBuilder::new(self)
     }
 }

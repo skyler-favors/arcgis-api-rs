@@ -206,6 +206,15 @@ mod content_tests {
 
         assert!(response2.success);
 
+        let get_response: String = client
+            .item(None::<String>, &response.id)
+            .get_resource()
+            .send("published_data.json")
+            .await
+            .unwrap();
+
+        assert_eq!(get_response, test_json);
+
         let app_url = client
             .portal
             .join(&format!("apps/storymaps/stories/{}", &response.id))
