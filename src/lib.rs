@@ -16,7 +16,7 @@ use reqwest::RequestBuilder;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
-use std::{backtrace::Backtrace, fmt, str::FromStr, sync::Arc};
+use std::{backtrace::Backtrace, fmt, str::FromStr, sync::{Arc, RwLock}};
 use url::Url;
 
 mod api;
@@ -349,7 +349,7 @@ impl ArcGISSharingClient {
                     header.set_sensitive(true);
                     Some(header)
                 }
-                AuthState::APIKey { ref token } => {
+                AuthState::APIKey { ref token, .. } => {
                     let mut header =
                         HeaderValue::from_str(format!("Bearer {}", token.expose_secret()).as_str())
                             .map_err(http::Error::from)
@@ -437,7 +437,10 @@ impl ArcGISSharingClientBuilder {
     pub fn build(self) -> ArcGISSharingClient {
         let auth = match self.auth {
             Auth::None => AuthState::None,
-            Auth::APIKey(token) => AuthState::APIKey { token },
+            Auth::APIKey(token) => AuthState::APIKey {
+                token,
+                cached_username: Arc::new(RwLock::new(None)),
+            },
             Auth::LegacyToken(auth) => AuthState::LegacyToken {
                 auth: auth.clone(),
                 token: CachedToken::default(),
@@ -487,13 +490,13 @@ impl ArcGISSharingClient {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
                 }
-                AuthState::APIKey { .. } => {
-                    todo!("Fetch user's info from token")
+                AuthState::APIKey { ref cached_username, .. } => {
+                    cached_username.read().unwrap().clone()
                 }
                 _ => None,
             },
         }
-        .expect("No username provided");
+        .expect("No username provided — for API key auth, call fetch_current_user().await first");
 
         ContentHandler::new(self, username)
     }
@@ -511,13 +514,13 @@ impl ArcGISSharingClient {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
                 }
-                AuthState::APIKey { .. } => {
-                    todo!("Fetch user's info from token")
+                AuthState::APIKey { ref cached_username, .. } => {
+                    cached_username.read().unwrap().clone()
                 }
                 _ => None,
             },
         }
-        .expect("No username provided");
+        .expect("No username provided — for API key auth, call fetch_current_user().await first");
 
         ItemHandler::new(self, username, id.into())
     }
@@ -532,6 +535,21 @@ impl ArcGISSharingClient {
 
     pub fn community_self(&self) -> CommunitySelfBuilder<'_> {
         CommunitySelfBuilder::new(self)
+    }
+
+    /// Fetches the current user from `sharing/rest/community/self` and caches
+    /// the username for API key auth. Call this before `content(None)` or
+    /// `item(None, ...)` when using API key or `with_token()` authentication.
+    pub async fn fetch_current_user(&self) -> Result<models::UserSelfResponse> {
+        let user = self.community_self().send().await?;
+        if let AuthState::APIKey {
+            ref cached_username,
+            ..
+        } = self.auth_state
+        {
+            *cached_username.write().unwrap() = Some(user.username.clone());
+        }
+        Ok(user)
     }
 
     /// Returns a new [`ArcGISSharingClient`] that authenticates all requests
@@ -561,6 +579,7 @@ impl ArcGISSharingClient {
             portal: self.portal.clone(),
             auth_state: AuthState::APIKey {
                 token: token.into(),
+                cached_username: Arc::new(RwLock::new(None)),
             },
         }
     }

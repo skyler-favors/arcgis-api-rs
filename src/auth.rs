@@ -9,6 +9,8 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
+pub type CachedUsername = Arc<RwLock<Option<String>>>;
+
 use chrono::{DateTime, Utc};
 use secrecy::{ExposeSecret, SecretString};
 use snafu::ResultExt;
@@ -49,9 +51,7 @@ pub enum AuthState {
     /// Legacy Note: If you are using "Legacy API Keys" (created before June 2024), these are set to expire by May 2026. You should migrate to the new "API Key Credentials" items.
     APIKey {
         token: SecretString,
-        //auth: LegacyToken,
-        //token: CachedToken,
-        //refresh_mutex: Arc<tokio::sync::Mutex<()>>,
+        cached_username: CachedUsername,
     },
 }
 
@@ -137,7 +137,9 @@ impl fmt::Debug for AuthState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AuthState::None => write!(f, "None"),
-            AuthState::APIKey { token } => f.debug_struct("APIKey").field("token", token).finish(),
+            AuthState::APIKey { token, .. } => {
+                f.debug_struct("APIKey").field("token", token).finish()
+            }
             AuthState::LegacyToken { auth, token, .. } => f
                 .debug_struct("LegacyToken")
                 .field("auth", auth)
