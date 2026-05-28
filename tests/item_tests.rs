@@ -32,10 +32,24 @@ mod item_tests {
             .await
             .unwrap();
 
-        println!(
-            "Item data: {}",
-            serde_json::to_string_pretty(&data).unwrap()
-        );
+        //println!("{}", serde_json::to_string(&data).unwrap());
+
+        //let mut out = vec![];
+        //for layer in data.operational_layers.clone() {
+        let layer = data.operational_layers[0].clone();
+        if let Some(url) = layer.url {
+            let fs_data = client.feature_service(url).info().await.unwrap();
+
+            println!("{}", serde_json::to_string(&fs_data).unwrap());
+            //out.push(fs_data);
+        }
+        //}
+        //println!("{}", serde_json::to_string(&out).unwrap());
+
+        // println!(
+        //     "Item data: {}",
+        //     serde_json::to_string_pretty(&data).unwrap()
+        // );
     }
 
     #[tokio::test]

@@ -73,16 +73,16 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Some(Value::Null),
-                drawing_info: Some(WebMapDrawingInfo::default()),
+                //drawing_info: Some(WebMapDrawingInfo::default()),
                 definition_expression: Some(Value::Null),
             }),
             popup_info: None,
             item_id: None,
-            feature_effect: Some(Value::Null),
+            //feature_effect: Some(Value::Null),
             show_labels: Some(false),
-            effect: None,
-            blend_mode: None,
-            style_url: None,
+            // effect: None,
+            // blend_mode: None,
+            // style_url: None,
         };
 
         self.operational_layers.push(layer);
@@ -128,16 +128,16 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Some(Value::Null),
-                drawing_info: Some(WebMapDrawingInfo::default()),
+                //drawing_info: Some(WebMapDrawingInfo::default()),
                 definition_expression: Some(Value::Null),
             }),
             popup_info: None,
             item_id: Some(item_id),
-            feature_effect: Some(Value::Null),
+            //feature_effect: Some(Value::Null),
             show_labels: Some(false),
-            effect: None,
-            blend_mode: None,
-            style_url: None,
+            // effect: None,
+            // blend_mode: None,
+            // style_url: None,
         };
 
         self.operational_layers.push(layer);
@@ -410,7 +410,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "World_Hillshade_3689".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Hillshade".to_string(),
                         url: Some("https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer".to_string()),
                         visibility: true,
@@ -421,7 +421,7 @@ impl WebMapBuilder {
                     },
                     BaseMapLayer {
                         id: "VectorTile_6451".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Topographic Map".to_string(),
                         url: None,
                         visibility: true,
@@ -437,7 +437,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "World_Street_Map_8722".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Street Map".to_string(),
                         url: Some("https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer".to_string()),
                         visibility: true,
@@ -453,7 +453,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "World_Imagery_2233".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Imagery".to_string(),
                         url: Some("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer".to_string()),
                         visibility: true,
@@ -464,7 +464,7 @@ impl WebMapBuilder {
                     },
                     BaseMapLayer {
                         id: "World_Boundaries_and_Places_5488".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Boundaries and Places".to_string(),
                         url: None,
                         visibility: true,
@@ -480,7 +480,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "VectorTile_Dark_Gray_8199".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "Dark Gray Canvas".to_string(),
                         url: None,
                         visibility: true,
@@ -496,7 +496,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "VectorTile_Light_Gray_2827".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "Light Gray Canvas".to_string(),
                         url: None,
                         visibility: true,
@@ -512,7 +512,7 @@ impl WebMapBuilder {
                 base_map_layers: vec![
                     BaseMapLayer {
                         id: "VectorTile_Navigation_8145".to_string(),
-                        opacity: Some(1),
+                        opacity: Some(1.0),
                         title: "World Navigation Map".to_string(),
                         url: None,
                         visibility: true,

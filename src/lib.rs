@@ -16,7 +16,12 @@ use reqwest::RequestBuilder;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
-use std::{backtrace::Backtrace, fmt, str::FromStr, sync::{Arc, RwLock}};
+use std::{
+    backtrace::Backtrace,
+    fmt,
+    str::FromStr,
+    sync::{Arc, RwLock},
+};
 use url::Url;
 
 mod api;
@@ -367,12 +372,12 @@ impl ArcGISSharingClient {
             // away from ArcGIS (via follow_location_to_data()), and we don't
             // want to give our credentials to third-party services.
 
-            if request.url().authority() == self.portal.authority() {
-                auth_header.set_sensitive(true);
-                request
-                    .headers_mut()
-                    .insert("X-Esri-Authorization", auth_header);
-            }
+            //if request.url().authority() == self.portal.authority() {
+            auth_header.set_sensitive(true);
+            request
+                .headers_mut()
+                .insert("X-Esri-Authorization", auth_header);
+            //}
         }
 
         // append f=json to the url
@@ -394,7 +399,6 @@ impl ArcGISSharingClient {
 
         Ok(response)
     }
-
 }
 
 #[derive(Default)]
@@ -490,9 +494,10 @@ impl ArcGISSharingClient {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
                 }
-                AuthState::APIKey { ref cached_username, .. } => {
-                    cached_username.read().unwrap().clone()
-                }
+                AuthState::APIKey {
+                    ref cached_username,
+                    ..
+                } => cached_username.read().unwrap().clone(),
                 _ => None,
             },
         }
@@ -514,9 +519,10 @@ impl ArcGISSharingClient {
                 AuthState::LegacyToken { ref auth, .. } => {
                     Some(auth.username.expose_secret().to_string())
                 }
-                AuthState::APIKey { ref cached_username, .. } => {
-                    cached_username.read().unwrap().clone()
-                }
+                AuthState::APIKey {
+                    ref cached_username,
+                    ..
+                } => cached_username.read().unwrap().clone(),
                 _ => None,
             },
         }

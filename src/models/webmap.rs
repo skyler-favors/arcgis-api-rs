@@ -15,18 +15,18 @@ pub struct OperationalLayer {
     pub layer_definition: Option<LayerDefinition>,
     pub popup_info: Option<PopupInfo>,
     pub item_id: Option<String>,
-    pub feature_effect: Option<Value>,
+    //pub feature_effect: Option<Value>,
     pub show_labels: Option<bool>,
-    pub effect: Option<Vec<Effect>>,
-    pub blend_mode: Option<String>,
-    pub style_url: Option<String>,
+    //pub effect: Option<Vec<Effect>>,
+    //pub blend_mode: Option<String>,
+    //pub style_url: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerDefinition {
     pub feature_reduction: Option<Value>,
-    pub drawing_info: Option<WebMapDrawingInfo>,
+    //pub drawing_info: Option<WebMapDrawingInfo>,
     pub definition_expression: Option<Value>,
 }
 
@@ -204,7 +204,7 @@ pub struct EffectValue {
     pub xoffset: f64,
     pub yoffset: f64,
     pub blur_radius: f64,
-    pub color: Vec<i64>,
+    pub color: Vec<f64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -218,7 +218,7 @@ pub struct BaseMap {
 #[serde(rename_all = "camelCase")]
 pub struct BaseMapLayer {
     pub id: String,
-    pub opacity: Option<i64>,
+    pub opacity: Option<f64>,
     pub title: String,
     pub url: Option<String>,
     pub visibility: bool,

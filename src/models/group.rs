@@ -48,7 +48,7 @@ pub struct Group {
     pub auto_join: bool,
     pub leaving_disallowed: bool,
     pub hidden_members: bool,
-    pub membership_access: String,
+    //pub membership_access: String,
     pub access: String,
     pub owner: String,
     pub description: Option<String>,
