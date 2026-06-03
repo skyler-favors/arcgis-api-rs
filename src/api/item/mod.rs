@@ -5,6 +5,7 @@ mod get_resource;
 mod publish;
 mod resources;
 mod update;
+mod update_resources;
 
 use std::sync::OnceLock;
 
@@ -14,7 +15,7 @@ use crate::{
     api::item::{
         add_resources::AddResourcesBuilder, data::ItemDataBuilder, delete::DeleteItemBuilder,
         get_resource::GetResourceBuilder, publish::PublishItemBuilder, resources::ResourcesBuilder,
-        update::UpdateItemBuilder,
+        update::UpdateItemBuilder, update_resources::UpdateResourcesBuilder,
     },
     error::{Result, UrlParseSnafu},
     models::Item,
@@ -24,7 +25,7 @@ use crate::{
 /// Handler for item-scoped ArcGIS content operations.
 ///
 /// Item id alone is sufficient for read paths (`info`, `data`, `resources`). Mutating
-/// operations (`update`, `delete`, `publish`, `add_resources`) resolve the item owner
+/// operations (`update`, `delete`, `publish`, `add_resources`, `update_resources`) resolve the item owner
 /// via `GET /content/items/{id}` on first use (or reuse the owner cached by a prior
 /// `info()` call).
 pub struct ItemHandler<'a> {
@@ -90,6 +91,10 @@ impl<'a> ItemHandler<'a> {
 
     pub fn add_resources(&self) -> AddResourcesBuilder<'_, '_> {
         AddResourcesBuilder::new(self)
+    }
+
+    pub fn update_resources(&self) -> UpdateResourcesBuilder<'_, '_> {
+        UpdateResourcesBuilder::new(self)
     }
 
     pub fn get_resource(&self) -> GetResourceBuilder<'_, '_> {

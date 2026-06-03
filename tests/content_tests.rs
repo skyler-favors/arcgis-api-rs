@@ -5,10 +5,6 @@ use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod content_tests {
-    use std::str::FromStr;
-
-    use url::Url;
-
     use super::*;
 
     #[tokio::test]
@@ -167,12 +163,13 @@ mod content_tests {
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
-        let title = format!("test-storymap-{}", uuid);
+        let title = format!("test-resource-item-{}", uuid);
 
+        // CSV does not support addResources (CONT_0090); Code Attachment does.
         let response = client
             .content(None::<String>)
             .add_item()
-            .set_type("StoryMap")
+            .set_type("Code Attachment")
             .title(title)
             .send()
             .await
@@ -180,12 +177,12 @@ mod content_tests {
 
         assert!(response.success);
 
-        let test_json = r#"{"root":"n-LI0O6Y","nodes":{"n-Ejj8Sv":{"type":"storycover","data":{"type":"minimal","title":"helllo","summary":"","byline":"Skyler Favors","titlePanelHorizontalPosition":"start","titlePanelVerticalPosition":"top","titlePanelStyle":"gradient"}},"n-6ZqiAj":{"type":"navigation","data":{"links":[]},"config":{"isHidden":true}},"n-I3tLN5":{"type":"text","data":{"text":"","type":"h4"}},"n-i7vfmz":{"type":"text","data":{"text":"","type":"paragraph"}},"n-fw1A4v":{"type":"attribution","data":{"content":"","attribution":""}},"n-cxdAfh":{"type":"credits","children":["n-I3tLN5","n-i7vfmz","n-fw1A4v"]},"n-LI0O6Y":{"type":"story","data":{"storyTheme":"r-9u32J8"},"config":{"coverDate":"first-published"},"children":["n-Ejj8Sv","n-6ZqiAj","n-cxdAfh"]}},"resources":{"r-9u32J8":{"type":"story-theme","data":{"themeId":"summit","themeBaseVariableOverrides":{}}}}}"#;
+        let test_json = r#"{"label":"initial","version":1}"#;
 
         let response2 = client
             .item(&response.id)
             .add_resources()
-            .file_name("draft.json")
+            .file_name("config.json")
             .file(test_json)
             .access("private")
             .send()
@@ -194,10 +191,33 @@ mod content_tests {
 
         assert!(response2.success);
 
+        let updated_json = test_json.replace("\"initial\"", "\"updated\"");
+
+        let update_resources_response = client
+            .item(&response.id)
+            .update_resources()
+            .file_name("config.json")
+            .file(&updated_json)
+            .access("private")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(update_resources_response.success);
+
+        let config_response: String = client
+            .item(&response.id)
+            .get_resource()
+            .send("config.json")
+            .await
+            .unwrap();
+
+        assert_eq!(config_response, updated_json);
+
         let response2 = client
             .item(&response.id)
             .add_resources()
-            .file_name("published_data.json")
+            .file_name("metadata.json")
             .file(test_json)
             .access("inherit")
             .send()
@@ -209,41 +229,13 @@ mod content_tests {
         let get_response: String = client
             .item(&response.id)
             .get_resource()
-            .send("published_data.json")
+            .send("metadata.json")
             .await
             .unwrap();
 
         assert_eq!(get_response, test_json);
 
-        let app_url = client
-            .portal
-            .join(&format!("apps/storymaps/stories/{}", &response.id))
-            .unwrap()
-            .to_string();
-
-        let publish_url = &format!("{}/publish", app_url);
-
-        let update_response = client
-            .item(&response.id)
-            .update()
-            .url(app_url)
-            .text(test_json)
-            .send()
-            .await
-            .unwrap();
-        assert!(update_response.success);
-
-        let _response3 = client
-            ._post(Url::from_str(publish_url.as_str()).unwrap(), None::<&()>)
-            .await
-            .unwrap();
-
-        let list = client
-            .item(&response.id)
-            .resources()
-            .send()
-            .await
-            .unwrap();
+        let list = client.item(&response.id).resources().send().await.unwrap();
 
         assert_eq!(list.resources.len(), 2);
     }
