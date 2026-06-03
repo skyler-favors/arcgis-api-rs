@@ -23,7 +23,7 @@ use std::{
 use url::Url;
 
 mod api;
-mod auth;
+pub mod auth;
 pub mod builders;
 pub mod error;
 mod from_response;

@@ -1,6 +1,6 @@
 use crate::{
     error::{ReqwestSnafu, Result},
-    models::TokenResponse,
+    models::{OAuthTokenResponse, TokenResponse},
 };
 use std::{
     collections::HashMap,
@@ -209,6 +209,64 @@ impl LegacyToken {
 
         Ok((response.token, ttl))
     }
+}
+
+/// Exchange an OAuth 2.0 authorization code for portal tokens (PKCE).
+pub async fn exchange_oauth_authorization_code(
+    token_url: &str,
+    client_id: &str,
+    code: &str,
+    redirect_uri: &str,
+    code_verifier: &str,
+) -> Result<OAuthTokenResponse> {
+    exchange_oauth_authorization_code_with_client(
+        &reqwest::Client::new(),
+        token_url,
+        client_id,
+        code,
+        redirect_uri,
+        code_verifier,
+    )
+    .await
+}
+
+/// Same as [`exchange_oauth_authorization_code`] but uses an existing HTTP client.
+pub async fn exchange_oauth_authorization_code_with_client(
+    client: &reqwest::Client,
+    token_url: &str,
+    client_id: &str,
+    code: &str,
+    redirect_uri: &str,
+    code_verifier: &str,
+) -> Result<OAuthTokenResponse> {
+    let response = client
+        .post(token_url)
+        .form(&[
+            ("client_id", client_id),
+            ("grant_type", "authorization_code"),
+            ("code", code),
+            ("redirect_uri", redirect_uri),
+            ("code_verifier", code_verifier),
+        ])
+        .send()
+        .await
+        .context(ReqwestSnafu)?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(crate::error::Error::arcgis(crate::error::ArcgisError {
+            code: status.as_u16() as i32,
+            message_code: None,
+            message: body,
+            details: None,
+        }));
+    }
+
+    response
+        .json::<OAuthTokenResponse>()
+        .await
+        .context(ReqwestSnafu)
 }
 
 fn duration_until(unix_ts: i64) -> Option<Duration> {
