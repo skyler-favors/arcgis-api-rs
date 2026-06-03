@@ -40,13 +40,14 @@ impl<'a, 'r> DeleteItemBuilder<'a, 'r> {
     }
 
     pub async fn send(&self) -> Result<DeleteItemResponse> {
+        let owner = self.handler.ensure_owner().await?;
         let url = self
             .handler
             .client
             .portal
             .join(&format!(
                 "sharing/rest/content/users/{}/items/{}/delete",
-                self.handler.username, self.handler.id
+                owner, self.handler.id
             ))
             .context(UrlParseSnafu)?;
 

@@ -506,29 +506,13 @@ impl ArcGISSharingClient {
         ContentHandler::new(self, username)
     }
 
-    pub fn item(
-        &self,
-        username: Option<impl Into<String>>,
-        id: impl Into<String>,
-    ) -> ItemHandler<'_> {
-        // if username is provided, use it;
-        // otherwise, use the username from the auth state
-        let username = match username {
-            Some(username) => Some(username.into()),
-            None => match self.auth_state {
-                AuthState::LegacyToken { ref auth, .. } => {
-                    Some(auth.username.expose_secret().to_string())
-                }
-                AuthState::APIKey {
-                    ref cached_username,
-                    ..
-                } => cached_username.read().unwrap().clone(),
-                _ => None,
-            },
-        }
-        .expect("No username provided — for API key auth, call fetch_current_user().await first");
-
-        ItemHandler::new(self, username, id.into())
+    /// Returns a handler for operations on a portal item by id.
+    ///
+    /// The item owner is resolved automatically from `GET /content/items/{id}`
+    /// when needed (e.g. `update`, `delete`). A prior `info()` call caches the
+    /// owner and avoids an extra lookup for mutating operations.
+    pub fn item(&self, id: impl Into<String>) -> ItemHandler<'_> {
+        ItemHandler::new(self, id.into())
     }
 
     pub fn search(&self) -> SearchBuilder<'_> {
@@ -544,8 +528,8 @@ impl ArcGISSharingClient {
     }
 
     /// Fetches the current user from `sharing/rest/community/self` and caches
-    /// the username for API key auth. Call this before `content(None)` or
-    /// `item(None, ...)` when using API key or `with_token()` authentication.
+    /// the username for API key auth. Call this before `content(None)` when
+    /// using API key or `with_token()` authentication.
     pub async fn fetch_current_user(&self) -> Result<models::UserSelfResponse> {
         let user = self.community_self().send().await?;
         if let AuthState::APIKey {

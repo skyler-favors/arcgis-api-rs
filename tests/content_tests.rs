@@ -183,7 +183,7 @@ mod content_tests {
         let test_json = r#"{"root":"n-LI0O6Y","nodes":{"n-Ejj8Sv":{"type":"storycover","data":{"type":"minimal","title":"helllo","summary":"","byline":"Skyler Favors","titlePanelHorizontalPosition":"start","titlePanelVerticalPosition":"top","titlePanelStyle":"gradient"}},"n-6ZqiAj":{"type":"navigation","data":{"links":[]},"config":{"isHidden":true}},"n-I3tLN5":{"type":"text","data":{"text":"","type":"h4"}},"n-i7vfmz":{"type":"text","data":{"text":"","type":"paragraph"}},"n-fw1A4v":{"type":"attribution","data":{"content":"","attribution":""}},"n-cxdAfh":{"type":"credits","children":["n-I3tLN5","n-i7vfmz","n-fw1A4v"]},"n-LI0O6Y":{"type":"story","data":{"storyTheme":"r-9u32J8"},"config":{"coverDate":"first-published"},"children":["n-Ejj8Sv","n-6ZqiAj","n-cxdAfh"]}},"resources":{"r-9u32J8":{"type":"story-theme","data":{"themeId":"summit","themeBaseVariableOverrides":{}}}}}"#;
 
         let response2 = client
-            .item(None::<String>, &response.id)
+            .item(&response.id)
             .add_resources()
             .file_name("draft.json")
             .file(test_json)
@@ -195,7 +195,7 @@ mod content_tests {
         assert!(response2.success);
 
         let response2 = client
-            .item(None::<String>, &response.id)
+            .item(&response.id)
             .add_resources()
             .file_name("published_data.json")
             .file(test_json)
@@ -207,7 +207,7 @@ mod content_tests {
         assert!(response2.success);
 
         let get_response: String = client
-            .item(None::<String>, &response.id)
+            .item(&response.id)
             .get_resource()
             .send("published_data.json")
             .await
@@ -224,7 +224,7 @@ mod content_tests {
         let publish_url = &format!("{}/publish", app_url);
 
         let update_response = client
-            .item(None::<String>, &response.id)
+            .item(&response.id)
             .update()
             .url(app_url)
             .text(test_json)
@@ -239,7 +239,7 @@ mod content_tests {
             .unwrap();
 
         let list = client
-            .item(None::<String>, &response.id)
+            .item(&response.id)
             .resources()
             .send()
             .await

@@ -115,13 +115,14 @@ impl<'a, 'r> AddResourcesBuilder<'a, 'r> {
     }
 
     pub async fn send(&self) -> Result<AddResourcesResponse> {
+        let owner = self.handler.ensure_owner().await?;
         let url = self
             .handler
             .client
             .portal
             .join(&format!(
                 "sharing/rest/content/users/{}/items/{}/addResources",
-                self.handler.username, self.handler.id
+                owner, self.handler.id
             ))
             .context(crate::error::UrlParseSnafu)?;
 

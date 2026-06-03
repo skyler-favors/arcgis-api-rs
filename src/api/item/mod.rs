@@ -6,6 +6,8 @@ mod publish;
 mod resources;
 mod update;
 
+use std::sync::OnceLock;
+
 use snafu::ResultExt;
 
 use crate::{
@@ -15,37 +17,55 @@ use crate::{
         update::UpdateItemBuilder,
     },
     error::{Result, UrlParseSnafu},
-    models::{Item, ItemInfoResult},
+    models::Item,
     ArcGISSharingClient,
 };
 
+/// Handler for item-scoped ArcGIS content operations.
+///
+/// Item id alone is sufficient for read paths (`info`, `data`, `resources`). Mutating
+/// operations (`update`, `delete`, `publish`, `add_resources`) resolve the item owner
+/// via `GET /content/items/{id}` on first use (or reuse the owner cached by a prior
+/// `info()` call).
 pub struct ItemHandler<'a> {
     pub(crate) client: &'a ArcGISSharingClient,
-    pub(crate) username: String,
     pub(crate) id: String,
+    owner: OnceLock<String>,
 }
 
 impl<'a> ItemHandler<'a> {
-    pub(crate) fn new(client: &'a ArcGISSharingClient, username: String, id: String) -> Self {
+    pub(crate) fn new(client: &'a ArcGISSharingClient, id: String) -> Self {
         Self {
             client,
-            username,
             id,
+            owner: OnceLock::new(),
         }
     }
 
-    pub async fn info(&self) -> Result<Item> {
+    async fn fetch_item(&self) -> Result<Item> {
         let url = self
             .client
             .portal
-            .join(&format!(
-                "sharing/rest/content/users/{}/items/{}",
-                self.username, self.id
-            ))
+            .join(&format!("sharing/rest/content/items/{}", self.id))
             .context(UrlParseSnafu)?;
 
-        let response: ItemInfoResult = self.client.get(url, None::<&()>).await?;
-        Ok(response.item)
+        self.client.get(url, None::<&()>).await
+    }
+
+    pub(crate) async fn ensure_owner(&self) -> Result<&str> {
+        if let Some(owner) = self.owner.get() {
+            return Ok(owner.as_str());
+        }
+
+        let item = self.fetch_item().await?;
+        let _ = self.owner.set(item.owner);
+        Ok(self.owner.get().expect("owner set above").as_str())
+    }
+
+    pub async fn info(&self) -> Result<Item> {
+        let item = self.fetch_item().await?;
+        let _ = self.owner.set(item.owner.clone());
+        Ok(item)
     }
 
     pub fn data(&self) -> ItemDataBuilder<'_, '_> {

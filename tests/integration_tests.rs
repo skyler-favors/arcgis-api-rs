@@ -19,33 +19,33 @@ mod integration_tests {
         let task0 = tokio::spawn(async move {
             let client = arcgis_sharing_rs::instance();
             let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            let item = client.item(&item_id).info().await.unwrap();
             assert_eq!(item.id, item_id);
-            assert_eq!(item.title, "Cars");
+            assert_eq!(item.title, "Cars2");
             println!("task 0 done");
         });
         let task1 = tokio::spawn(async move {
             let client = arcgis_sharing_rs::instance();
             let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            let item = client.item(&item_id).info().await.unwrap();
             assert_eq!(item.id, item_id);
-            assert_eq!(item.title, "Cars");
+            assert_eq!(item.title, "Cars2");
             println!("task 1 done");
         });
         let task2 = tokio::spawn(async move {
             let client = arcgis_sharing_rs::instance();
             let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            let item = client.item(&item_id).info().await.unwrap();
             assert_eq!(item.id, item_id);
-            assert_eq!(item.title, "Cars");
+            assert_eq!(item.title, "Cars2");
             println!("task 2 done");
         });
         let task3 = tokio::spawn(async move {
             let client = arcgis_sharing_rs::instance();
             let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-            let item = client.item(None::<String>, &item_id).info().await.unwrap();
+            let item = client.item(&item_id).info().await.unwrap();
             assert_eq!(item.id, item_id);
-            assert_eq!(item.title, "Cars");
+            assert_eq!(item.title, "Cars2");
             println!("task 3 done");
         });
         // Await all tasks
@@ -104,7 +104,7 @@ mod integration_tests {
                 .build();
 
         client
-            .item(None::<String>, csv_id)
+            .item(csv_id)
             .publish()
             .set_publish_parameters(builder)
             .set_file_type("CSV")

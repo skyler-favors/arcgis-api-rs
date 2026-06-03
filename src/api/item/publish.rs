@@ -83,13 +83,14 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
     }
 
     pub async fn send(&self) -> Result<PublishItemResponse> {
+        let owner = self.handler.ensure_owner().await?;
         let url = self
             .handler
             .client
             .portal
             .join(&format!(
                 "sharing/rest/content/users/{}/publish",
-                self.handler.username
+                owner
             ))
             .context(crate::error::UrlParseSnafu)?;
 

@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3: Publish the CSV as a feature service using the analyzed parameters
     println!("\nPublishing CSV as feature service...");
     let publish_response = client
-        .item(None::<String>, &add_response.id)
+        .item(&add_response.id)
         .publish()
         .set_file_type("csv")
         .set_publish_parameters(analyze_response.publish_parameters)

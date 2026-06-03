@@ -14,9 +14,9 @@ mod item_tests {
         Lazy::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let item_id = std::env::var("TEST_ITEM_ID").unwrap();
-        let item = client.item(None::<String>, &item_id).info().await.unwrap();
+        let item = client.item(&item_id).info().await.unwrap();
         assert_eq!(item.id, item_id);
-        assert_eq!(item.title, "Cars");
+        assert_eq!(item.title, "Cars2");
     }
 
     #[tokio::test]
@@ -26,7 +26,7 @@ mod item_tests {
         let item_id = std::env::var("TEST_ITEM_ID2").unwrap();
 
         let data = client
-            .item(None::<String>, &item_id)
+            .item(&item_id)
             .data()
             .send::<WebMapDataJson>()
             .await
@@ -95,7 +95,7 @@ mod item_tests {
                 .set_layer_name(&uuid);
 
         let publish_response = client
-            .item(None::<String>, &add_response.id)
+            .item(&add_response.id)
             .publish()
             .csv_with_parameters(builder)
             .send()
@@ -145,7 +145,7 @@ mod item_tests {
 
         // Now update the item with multiple fields
         let update_response = client
-            .item(None::<String>, &add_response.id)
+            .item(&add_response.id)
             .update()
             .title(&updated_title)
             .description("Updated description")
@@ -186,12 +186,7 @@ mod item_tests {
         assert!(add_response.success);
         println!("Added item with ID: {}", add_response.id);
 
-        let delete_response = client
-            .item(None::<String>, &add_response.id)
-            .delete()
-            .send()
-            .await
-            .unwrap();
+        let delete_response = client.item(&add_response.id).delete().send().await.unwrap();
 
         assert!(delete_response.success);
         assert_eq!(delete_response.item_id, add_response.id);
@@ -207,7 +202,7 @@ mod item_tests {
         let item_id = std::env::var("TEST_ITEM_ID").unwrap();
 
         // Get current item info
-        let original_item = client.item(None::<String>, &item_id).info().await.unwrap();
+        let original_item = client.item(&item_id).info().await.unwrap();
 
         let original_title = original_item.title.clone();
         println!("Original item title: {}", original_title);
@@ -219,7 +214,7 @@ mod item_tests {
             chrono::Utc::now().format("%Y-%m-%d %H:%M:%S")
         );
         let update_response = client
-            .item(None::<String>, &item_id)
+            .item(&item_id)
             .update()
             .title(&temp_title)
             .snippet("Temporarily updated by test")
@@ -233,7 +228,7 @@ mod item_tests {
 
         // Restore original title
         let restore_response = client
-            .item(None::<String>, &item_id)
+            .item(&item_id)
             .update()
             .title(&original_title)
             .snippet("Test completed")
