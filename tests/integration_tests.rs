@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod integration_tests {
@@ -14,7 +14,7 @@ mod integration_tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     async fn test_client_async() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
 
         let task0 = tokio::spawn(async move {
             let client = arcgis_sharing_rs::instance();
@@ -54,7 +54,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_portal_url_and_token() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let _response: serde_json::Value = client
             .get(
@@ -142,7 +142,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_full_web_map_creation_flow() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let uuid = uuid::Uuid::new_v4().to_string();
         let add_csv_response = add_csv_item(&client, &uuid).await;

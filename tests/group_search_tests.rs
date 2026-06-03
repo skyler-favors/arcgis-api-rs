@@ -2,7 +2,7 @@ mod common;
 use common::*;
 
 use futures::StreamExt;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod search_tests {
@@ -10,7 +10,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_group_search_basic() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let results: Vec<_> = client

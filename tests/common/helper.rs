@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 fn init() {
     dotenvy::dotenv().ok();
@@ -20,6 +20,6 @@ fn init() {
 }
 
 #[allow(dead_code)]
-pub static SETUP: Lazy<()> = Lazy::new(|| {
+pub static SETUP: LazyLock<()> = LazyLock::new(|| {
     init();
 });

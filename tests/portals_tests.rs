@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod portals_tests {
@@ -9,7 +9,7 @@ mod portals_tests {
 
     #[tokio::test]
     async fn test_portals_self() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let response = client

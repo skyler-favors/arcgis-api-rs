@@ -30,19 +30,13 @@ impl<T: DeserializeOwned> FromResponse for T {
         if trimmed.is_empty() {
             // Deserialize null for empty responses
             let de = &mut serde_json::Deserializer::from_str("null");
-            return serde_path_to_error::deserialize(de).map_err(|e| Error::Json {
-                source: e,
-                backtrace: std::backtrace::Backtrace::capture(),
-            });
+            return serde_path_to_error::deserialize(de).map_err(Error::json);
         }
 
         // Use serde_path_to_error for better debugging
         // FIX: Use trimmed instead of bytes to properly handle leading whitespace
         let de = &mut serde_json::Deserializer::from_slice(trimmed);
 
-        serde_path_to_error::deserialize(de).map_err(|e| Error::Json {
-            source: e,
-            backtrace: std::backtrace::Backtrace::capture(),
-        })
+        serde_path_to_error::deserialize(de).map_err(Error::json)
     }
 }

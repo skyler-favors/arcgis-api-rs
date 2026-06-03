@@ -2,7 +2,7 @@ mod common;
 use common::*;
 
 use arcgis_sharing_rs::models::{GeometryType, SpatialRelationship};
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod feature_service_tests {
@@ -10,7 +10,7 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_private_feature_service() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
@@ -20,8 +20,11 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_public_feature_service() {
-        Lazy::force(&SETUP);
-        let client = arcgis_sharing_rs::instance();
+        LazyLock::force(&SETUP);
+        let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
+        let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
+            .portal(portal)
+            .build();
         let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
         let response = client.feature_service(fs_url).info().await.unwrap();
@@ -30,7 +33,7 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_feature_service_query_count_only() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
@@ -46,8 +49,11 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_feature_service_query_point_geometry() {
-        Lazy::force(&SETUP);
-        let client = arcgis_sharing_rs::instance();
+        LazyLock::force(&SETUP);
+        let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
+        let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
+            .portal(portal)
+            .build();
         let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
 
@@ -72,8 +78,11 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_feature_service_query_polygon_geometry() {
-        Lazy::force(&SETUP);
-        let client = arcgis_sharing_rs::instance();
+        LazyLock::force(&SETUP);
+        let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
+        let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
+            .portal(portal)
+            .build();
         let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
 
@@ -106,14 +115,14 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_feature_service_apply_edits_update() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
 
         let updates = vec![
-            serde_json::json!({"attributes": {"objectid": 1, "make": "Honda"}}),
-            serde_json::json!({"attributes": {"objectid": 2, "make": "Honda"}}),
+            serde_json::json!({"attributes": {"objectid": 10, "make": "Honda"}}),
+            serde_json::json!({"attributes": {"objectid": 11, "make": "Honda"}}),
         ];
 
         let response = client
@@ -132,7 +141,7 @@ mod feature_service_tests {
 
     #[tokio::test]
     async fn test_feature_service_unique_values() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE2")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");

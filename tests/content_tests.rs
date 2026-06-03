@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod content_tests {
@@ -13,7 +13,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_add_csv_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -40,7 +40,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_add_webmap_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -72,7 +72,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_analyze_csv_item_id() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -113,7 +113,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_analyze_csv_text() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let test_csv = r#"id,timestamp,status,temp_c,Longitude,Latitude
@@ -139,7 +139,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_analyze_csv_file() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let test_csv = r#"id,timestamp,status,temp_c,Longitude,Latitude
@@ -163,7 +163,7 @@ mod content_tests {
 
     #[tokio::test]
     async fn test_add_resource_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();

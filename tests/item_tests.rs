@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod item_tests {
@@ -11,7 +11,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_get_item_info() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let item_id = std::env::var("TEST_ITEM_ID").unwrap();
         let item = client.item(&item_id).info().await.unwrap();
@@ -21,7 +21,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_get_item_data() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let item_id = std::env::var("TEST_ITEM_ID2").unwrap();
 
@@ -54,7 +54,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_publish_csv_item_parameters() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -114,7 +114,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_update_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -162,7 +162,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_delete_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -195,7 +195,7 @@ mod item_tests {
 
     #[tokio::test]
     async fn test_update_existing_item() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Use the existing test item

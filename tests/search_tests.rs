@@ -2,7 +2,7 @@ mod common;
 use common::*;
 
 use futures::StreamExt;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod search_tests {
@@ -10,7 +10,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_basic() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let mut search_stream = client
@@ -39,7 +39,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_pagination() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Use small page size to ensure multiple pages are fetched
@@ -64,7 +64,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_max_pages_limit() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Limit to just 2 pages
@@ -87,7 +87,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_with_filters() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let mut search_stream = client
@@ -109,7 +109,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_collect() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Test using collect to gather all results
@@ -132,7 +132,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_take() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Test using take to limit results
@@ -151,7 +151,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_enriched() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Test with enriched parameter
@@ -174,7 +174,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_search_stream_empty_results() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Search for something that likely returns no results
@@ -201,7 +201,7 @@ mod search_tests {
     async fn test_search_stream_no_delay() {
         use std::time::{Duration, Instant};
 
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Test with no delay - should be faster
@@ -234,7 +234,7 @@ mod search_tests {
     async fn test_search_stream_custom_delay() {
         use std::time::{Duration, Instant};
 
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         // Test with custom delay
@@ -268,7 +268,7 @@ mod search_tests {
 
     #[tokio::test]
     async fn test_living_atlas_search() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let results: Vec<_> = client

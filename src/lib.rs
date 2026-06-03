@@ -11,16 +11,14 @@ use crate::{
 use bytes::Bytes;
 use chrono::Utc;
 use http::{HeaderValue, StatusCode};
-use once_cell::sync::Lazy;
 use reqwest::RequestBuilder;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use snafu::ResultExt;
 use std::{
-    backtrace::Backtrace,
     fmt,
     str::FromStr,
-    sync::{Arc, RwLock},
+    sync::{Arc, LazyLock, RwLock},
 };
 use url::Url;
 
@@ -32,8 +30,8 @@ mod from_response;
 pub mod models;
 
 #[cfg(feature = "default-client")]
-static STATIC_INSTANCE: Lazy<arc_swap::ArcSwap<ArcGISSharingClient>> =
-    Lazy::new(|| arc_swap::ArcSwap::from_pointee(ArcGISSharingClient::default()));
+static STATIC_INSTANCE: LazyLock<arc_swap::ArcSwap<ArcGISSharingClient>> =
+    LazyLock::new(|| arc_swap::ArcSwap::from_pointee(ArcGISSharingClient::default()));
 
 #[cfg(feature = "default-client")]
 #[cfg_attr(docsrs, doc(cfg(feature = "default-client")))]
@@ -81,15 +79,12 @@ async fn map_arcgis_error(response: reqwest::Response) -> Result<Bytes> {
     );
 
     match serde_json::from_slice(body.as_ref()) {
-        Ok(ArcgisErrorBody { error }) => Err(Error::Arcgis {
-            source: Box::new(ArcgisError {
-                code: error.code,
-                message_code: error.message_code,
-                message: error.message,
-                details: error.details,
-            }),
-            backtrace: Backtrace::capture(),
-        }),
+        Ok(ArcgisErrorBody { error }) => Err(Error::arcgis(ArcgisError {
+            code: error.code,
+            message_code: error.message_code,
+            message: error.message,
+            details: error.details,
+        })),
         Err(_e) => Ok(body),
     }
 }
@@ -295,9 +290,7 @@ impl ArcGISSharingClient {
             if let AuthState::LegacyToken { auth, token, .. } = &self.auth_state {
                 (auth, token)
             } else {
-                return Err(Error::LegacyAuth {
-                    backtrace: Backtrace::capture(),
-                });
+                return Err(Error::legacy_auth());
             };
 
         let (token, ttl) = auth.fetch_token(self.portal.as_str(), &self.client).await?;

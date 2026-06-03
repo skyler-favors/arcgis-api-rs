@@ -2,7 +2,7 @@ mod common;
 use common::*;
 
 use arcgis_sharing_rs::ArcGISSharingClient;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
 #[serial_test::serial]
 mod community_tests {
@@ -34,7 +34,7 @@ mod community_tests {
 
     #[tokio::test]
     async fn test_group_lifecycle() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let group_id = create_group(&client).await;
         delete_group(&client, &group_id).await;
@@ -42,7 +42,7 @@ mod community_tests {
 
     #[tokio::test]
     async fn test_community_self() {
-        Lazy::force(&SETUP);
+        LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
 
         let response = client
