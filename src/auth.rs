@@ -269,6 +269,56 @@ pub async fn exchange_oauth_authorization_code_with_client(
         .context(ReqwestSnafu)
 }
 
+/// Exchange an OAuth 2.0 refresh token for a new portal access token.
+pub async fn exchange_oauth_refresh_token(
+    token_url: &str,
+    client_id: &str,
+    refresh_token: &str,
+) -> Result<OAuthTokenResponse> {
+    exchange_oauth_refresh_token_with_client(
+        &reqwest::Client::new(),
+        token_url,
+        client_id,
+        refresh_token,
+    )
+    .await
+}
+
+/// Same as [`exchange_oauth_refresh_token`] but uses an existing HTTP client.
+pub async fn exchange_oauth_refresh_token_with_client(
+    client: &reqwest::Client,
+    token_url: &str,
+    client_id: &str,
+    refresh_token: &str,
+) -> Result<OAuthTokenResponse> {
+    let response = client
+        .post(token_url)
+        .form(&[
+            ("client_id", client_id),
+            ("grant_type", "refresh_token"),
+            ("refresh_token", refresh_token),
+        ])
+        .send()
+        .await
+        .context(ReqwestSnafu)?;
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        return Err(crate::error::Error::arcgis(crate::error::ArcgisError {
+            code: status.as_u16() as i32,
+            message_code: None,
+            message: body,
+            details: None,
+        }));
+    }
+
+    response
+        .json::<OAuthTokenResponse>()
+        .await
+        .context(ReqwestSnafu)
+}
+
 fn duration_until(unix_ts: i64) -> Option<Duration> {
     // TODO: should I be using chrono & utc??
     // ArcGIS returns timestamps in milliseconds
