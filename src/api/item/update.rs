@@ -444,7 +444,7 @@ impl<'a, 'r> UpdateItemBuilder<'a, 'r> {
         self
     }
 
-    /// Returns true if multipart encoding is needed (when file content is present)
+    /// Returns true if multipart encoding is needed (file, thumbnail, metadata, or text content)
     fn needs_multipart(&self) -> bool {
         self.file.is_some()
             || self.thumbnail.is_some()
@@ -465,10 +465,17 @@ impl<'a, 'r> UpdateItemBuilder<'a, 'r> {
         // Parse back as key-value pairs and add each as text to the form
         for (key, value) in form_urlencoded::parse(serialized.as_bytes()) {
             // Skip file fields - they need special multipart handling
-            if key == "file" || key == "thumbnail" || key == "metadata" {
+            if key == "file" || key == "thumbnail" || key == "metadata" || key == "text" {
                 continue;
             }
             form = form.text(key.into_owned(), value.into_owned());
+        }
+
+        if let Some(text_content) = &self.text {
+            let part = Part::text(text_content.clone())
+                .mime_str("application/json")
+                .context(crate::error::ReqwestSnafu)?;
+            form = form.part("text", part);
         }
 
         // Handle file upload separately with proper multipart encoding
@@ -529,10 +536,10 @@ impl<'a, 'r> UpdateItemBuilder<'a, 'r> {
                 .post_multipart(url.as_str(), form)
                 .await
         } else {
-            // Use standard form encoding for non-file requests
+            // Use standard form encoding for non-file requests (body, not query string)
             self.handler
                 .client
-                .post(url, Some(self), None)
+                .post(url, None, Some(self))
                 .await
         }
     }

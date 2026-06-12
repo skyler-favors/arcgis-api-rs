@@ -151,4 +151,48 @@ mod integration_tests {
         let web_map_response = add_web_map_item(&client, &uuid, &service_url).await;
         assert!(web_map_response.success)
     }
+
+    #[tokio::test]
+    async fn test_web_map_update_flow() {
+        LazyLock::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let add_csv_response = add_csv_item(&client, &uuid).await;
+        let publish_csv_response = publish_csv_item(&client, &uuid, &add_csv_response.id).await;
+        let service_url = publish_csv_response.services[0].serviceurl.clone();
+        let web_map_response = add_web_map_item(&client, &uuid, &service_url).await;
+        assert!(web_map_response.success);
+
+        let updated_title = format!("webmapIntegrationTestMap_{}_updated", uuid.replace("-", "_"));
+        let updated_web_map = arcgis_sharing_rs::builders::webmap::WebMapBuilder::new()
+            .set_extent(-109.5, 41.0, -109.0, 41.5, 4326)
+            .add_feature_layer(&service_url, "updated_layer")
+            .with_popup("Updated Feature {objectid}")
+            .add_popup_field("objectid", "OBJECTID", false, true)
+            .set_basemap(arcgis_sharing_rs::models::BasemapPreset::Topographic);
+        let updated_json = serde_json::to_string(&updated_web_map).unwrap();
+
+        let update_response = client
+            .item(&web_map_response.id)
+            .update()
+            .title(&updated_title)
+            .set_type("Web Map")
+            .text(updated_json)
+            .send()
+            .await
+            .unwrap();
+
+        assert!(update_response.success);
+        assert_eq!(update_response.id, web_map_response.id);
+
+        let data: arcgis_sharing_rs::models::WebMapDataJson = client
+            .item(&web_map_response.id)
+            .data()
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(data.operational_layers.len(), 1);
+        assert_eq!(data.operational_layers[0].title, "updated_layer");
+    }
 }
