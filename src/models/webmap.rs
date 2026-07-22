@@ -26,7 +26,7 @@ pub struct OperationalLayer {
 #[serde(rename_all = "camelCase")]
 pub struct LayerDefinition {
     pub feature_reduction: Option<Value>,
-    //pub drawing_info: Option<WebMapDrawingInfo>,
+    pub drawing_info: Option<WebMapDrawingInfo>,
     pub definition_expression: Option<Value>,
 }
 
@@ -60,6 +60,10 @@ pub struct WebMapSymbol {
     pub outline: Option<Outline>,
     pub style: Option<String>,
     pub symbol: Option<WebMapSymbol2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

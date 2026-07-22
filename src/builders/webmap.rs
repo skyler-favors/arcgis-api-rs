@@ -73,7 +73,7 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Some(Value::Null),
-                //drawing_info: Some(WebMapDrawingInfo::default()),
+                drawing_info: None,
                 definition_expression: Some(Value::Null),
             }),
             popup_info: None,
@@ -128,7 +128,7 @@ impl WebMapBuilder {
             layer_type: "ArcGISFeatureLayer".to_string(),
             layer_definition: Some(LayerDefinition {
                 feature_reduction: Some(Value::Null),
-                //drawing_info: Some(WebMapDrawingInfo::default()),
+                drawing_info: None,
                 definition_expression: Some(Value::Null),
             }),
             popup_info: None,
@@ -178,6 +178,16 @@ impl WebMapBuilder {
     pub fn set_layer_opacity(mut self, opacity: f64) -> Self {
         if let Some(layer) = self.operational_layers.last_mut() {
             layer.opacity = Some(opacity);
+        }
+        self
+    }
+
+    /// Override symbology for the last added layer with a simple renderer.
+    pub fn with_layer_symbology(mut self, color: [u8; 4], geometry_type: &str) -> Self {
+        if let Some(layer) = self.operational_layers.last_mut() {
+            if let Some(ref mut layer_def) = layer.layer_definition {
+                layer_def.drawing_info = Some(simple_drawing_info(color, geometry_type));
+            }
         }
         self
     }
@@ -377,32 +387,6 @@ impl WebMapBuilder {
         self
     }
 
-    // pub fn build(self) -> WebMapJson {
-    //     WebMapJson {
-    //         operational_layers: self.operational_layers,
-    //         base_map: self.basemap,
-    //         authoring_app: self.authoring_app,
-    //         authoring_app_version: self.authoring_app_version,
-    //         initial_state: self.initial_state.unwrap_or_else(|| InitialState {
-    //             viewpoint: Viewpoint {
-    //                 target_geometry: TargetGeometry {
-    //                     spatial_reference: SpatialReference {
-    //                         latest_wkid: 3857,
-    //                         wkid: 102100,
-    //                     },
-    //                     xmin: -20037508.342789244,
-    //                     ymin: -20037508.342789244,
-    //                     xmax: 20037508.342789244,
-    //                     ymax: 20037508.342789244,
-    //                 },
-    //             },
-    //         }),
-    //         spatial_reference: self.spatial_reference,
-    //         time_zone: self.time_zone,
-    //         version: self.version,
-    //     }
-    // }
-
     /// Create a basemap configuration from a preset
     fn create_basemap_config(preset: BasemapPreset) -> BaseMap {
         match preset {
@@ -528,6 +512,60 @@ impl WebMapBuilder {
     }
 }
 
+fn color_vec(color: [u8; 4]) -> Vec<i64> {
+    color.into_iter().map(i64::from).collect()
+}
+
+fn black_outline(width: f64) -> Outline {
+    Outline {
+        type_field: "esriSLS".to_string(),
+        color: vec![0, 0, 0, 255],
+        width,
+        style: "esriSLSSolid".to_string(),
+    }
+}
+
+fn simple_drawing_info(color: [u8; 4], geometry_type: &str) -> WebMapDrawingInfo {
+    let rgba = color_vec(color);
+    let symbol = match geometry_type {
+        "esriGeometryPolyline" => WebMapSymbol {
+            type_field: "esriSLS".to_string(),
+            color: Some(rgba),
+            style: Some("esriSLSSolid".to_string()),
+            width: Some(2.0),
+            outline: None,
+            symbol: None,
+            size: None,
+        },
+        "esriGeometryPolygon" => WebMapSymbol {
+            type_field: "esriSFS".to_string(),
+            color: Some(rgba),
+            style: Some("esriSFSSolid".to_string()),
+            outline: Some(black_outline(1.0)),
+            symbol: None,
+            size: None,
+            width: None,
+        },
+        _ => WebMapSymbol {
+            type_field: "esriSMS".to_string(),
+            color: Some(rgba),
+            style: Some("esriSMSCircle".to_string()),
+            size: Some(6.0),
+            outline: Some(black_outline(1.0)),
+            symbol: None,
+            width: None,
+        },
+    };
+
+    WebMapDrawingInfo {
+        renderer: WebMapRenderer {
+            type_field: "simple".to_string(),
+            symbol: Some(symbol),
+            ..Default::default()
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -604,6 +642,30 @@ mod tests {
         assert_eq!(geom.xmax, -109.0);
         assert_eq!(geom.ymax, 41.5);
         assert_eq!(geom.spatial_reference.wkid, 4326);
+    }
+
+    #[test]
+    fn test_web_map_builder_layer_symbology() {
+        let color = [31, 119, 180, 255];
+        let web_map = WebMapBuilder::new()
+            .add_feature_layer(
+                "https://services.arcgis.com/test/FeatureServer/0",
+                "Test Layer",
+            )
+            .with_layer_symbology(color, "esriGeometryPoint");
+
+        let layer_def = web_map.operational_layers[0]
+            .layer_definition
+            .as_ref()
+            .unwrap();
+        let drawing_info = layer_def.drawing_info.as_ref().unwrap();
+        let symbol = drawing_info.renderer.symbol.as_ref().unwrap();
+        assert_eq!(symbol.type_field, "esriSMS");
+        assert_eq!(symbol.color.as_ref().unwrap(), &color_vec(color));
+
+        let json = serde_json::to_string(&web_map).unwrap();
+        assert!(json.contains("drawingInfo"));
+        assert!(json.contains("[31,119,180,255]"));
     }
 
     #[test]
