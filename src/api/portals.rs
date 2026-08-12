@@ -39,9 +39,6 @@ impl<'a, 'r> PortalsSelfBuilder<'a, 'r> {
             .join("sharing/rest/portals/self")
             .context(UrlParseSnafu)?;
 
-        self.handler
-            .client
-            .get(url, None::<&()>)
-            .await
+        self.handler.client.get(url, None::<&()>).await
     }
 }

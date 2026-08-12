@@ -90,7 +90,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .send();
 
     let filtered_results: Vec<_> = filtered_stream.collect().await;
-    println!("Found {} groups with exact title match", filtered_results.len());
+    println!(
+        "Found {} groups with exact title match",
+        filtered_results.len()
+    );
 
     // Example: Sort by creation date
     println!("\n--- Sorted by creation date (newest first) ---");
@@ -104,7 +107,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect()
         .await;
 
-    println!("Found {} climate groups (sorted by date):", sorted_results.len());
+    println!(
+        "Found {} climate groups (sorted by date):",
+        sorted_results.len()
+    );
     for group in sorted_results {
         println!("  - {} (created: {})", group.title, group.created);
     }

@@ -211,9 +211,6 @@ impl<'a, 'r> CreateGroupBuilder<'a, 'r> {
             .join("sharing/rest/community/createGroup")
             .context(UrlParseSnafu)?;
 
-        self.handler
-            .client
-            .post(url, Some(&self), None)
-            .await
+        self.handler.client.post(url, Some(&self), None).await
     }
 }

@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     while let Some(result) = search_stream.next().await {
         count += 1;
         println!("{:>3}. {} ({})", count, result.title, result.owner);
-        
+
         if count >= 20 {
             println!("\n(Stopping after 20 items...)");
             break;

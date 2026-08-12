@@ -24,9 +24,6 @@ impl<'a, 'r> ItemDataBuilder<'a, 'r> {
             ))
             .context(crate::error::UrlParseSnafu)?;
 
-        self.handler
-            .client
-            .get(url, None::<&()>)
-            .await
+        self.handler.client.get(url, None::<&()>).await
     }
 }

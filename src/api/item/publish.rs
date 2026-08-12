@@ -88,18 +88,12 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
             .handler
             .client
             .portal
-            .join(&format!(
-                "sharing/rest/content/users/{}/publish",
-                owner
-            ))
+            .join(&format!("sharing/rest/content/users/{}/publish", owner))
             .context(crate::error::UrlParseSnafu)?;
 
         let form = self.to_multipart()?;
 
         // POST with params as the body (not query parameters)
-        self.handler
-            .client
-            .post_multipart(url, form)
-            .await
+        self.handler.client.post_multipart(url, form).await
     }
 }

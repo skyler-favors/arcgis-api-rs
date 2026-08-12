@@ -26,9 +26,7 @@ impl std::error::Error for UriParseError {}
 pub enum Error {
     #[snafu(display("ArcGIS Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Arcgis {
-        source: Box<ArcgisError>,
-    },
+    Arcgis { source: Box<ArcgisError> },
 
     #[snafu(display("ArcGIS Error: {}\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -39,9 +37,7 @@ pub enum Error {
 
     #[snafu(display("URL Parse Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    UrlParse {
-        source: url::ParseError,
-    },
+    UrlParse { source: url::ParseError },
 
     #[snafu(display("URL Parse Error: {} at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -52,9 +48,7 @@ pub enum Error {
 
     #[snafu(display("Invalid Header: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    UriParse {
-        source: UriParseError,
-    },
+    UriParse { source: UriParseError },
 
     #[snafu(display("Invalid Header: {} at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -65,9 +59,7 @@ pub enum Error {
 
     #[snafu(display("URL Parse Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Uri {
-        source: InvalidUri,
-    },
+    Uri { source: InvalidUri },
 
     #[snafu(display("URL Parse Error: {} at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -82,9 +74,7 @@ pub enum Error {
 
     #[snafu(display("LegacyAuth error.\n\nFound at {}", backtrace))]
     #[cfg(feature = "error-backtrace")]
-    LegacyAuth {
-        backtrace: Backtrace,
-    },
+    LegacyAuth { backtrace: Backtrace },
 
     #[snafu(display("{}", source))]
     #[cfg(not(feature = "error-backtrace"))]
@@ -101,9 +91,7 @@ pub enum Error {
 
     #[snafu(display("Reqwest Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Reqwest {
-        source: reqwest::Error,
-    },
+    Reqwest { source: reqwest::Error },
 
     #[snafu(display("Reqwest Error: {}\n\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -114,9 +102,7 @@ pub enum Error {
 
     #[snafu(display("HTTP Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Http {
-        source: http::Error,
-    },
+    Http { source: http::Error },
 
     #[snafu(display("HTTP Error: {}\n\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -127,9 +113,7 @@ pub enum Error {
 
     #[snafu(display("{}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    InvalidUtf8 {
-        source: FromUtf8Error,
-    },
+    InvalidUtf8 { source: FromUtf8Error },
 
     #[snafu(display("{}\n\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -140,9 +124,7 @@ pub enum Error {
 
     #[snafu(display("{}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Encoder {
-        source: std::io::Error,
-    },
+    Encoder { source: std::io::Error },
 
     #[snafu(display("{}\n\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
@@ -166,9 +148,7 @@ pub enum Error {
 
     #[snafu(display("Serde Error: {}", source))]
     #[cfg(not(feature = "error-backtrace"))]
-    Serde {
-        source: serde_json::Error,
-    },
+    Serde { source: serde_json::Error },
 
     #[snafu(display("Serde Error: {}\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]

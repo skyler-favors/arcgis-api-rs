@@ -30,9 +30,6 @@ impl<'a, 'r> DeleteGroupsBuilder<'a, 'r> {
             ))
             .context(UrlParseSnafu)?;
 
-        handler
-            .client
-            .post(url, None::<&()>, None)
-            .await
+        handler.client.post(url, None::<&()>, None).await
     }
 }

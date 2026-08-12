@@ -21,8 +21,6 @@ impl<'a> CommunitySelfBuilder<'a> {
             .join("sharing/rest/community/self")
             .context(UrlParseSnafu)?;
 
-        self.client
-            .get(url, None::<&()>)
-            .await
+        self.client.get(url, None::<&()>).await
     }
 }

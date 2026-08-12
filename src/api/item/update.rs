@@ -531,16 +531,10 @@ impl<'a, 'r> UpdateItemBuilder<'a, 'r> {
         if self.needs_multipart() {
             // Use multipart encoding for file uploads
             let form = self.to_multipart()?;
-            self.handler
-                .client
-                .post_multipart(url.as_str(), form)
-                .await
+            self.handler.client.post_multipart(url.as_str(), form).await
         } else {
             // Use standard form encoding for non-file requests (body, not query string)
-            self.handler
-                .client
-                .post(url, None, Some(self))
-                .await
+            self.handler.client.post(url, None, Some(self)).await
         }
     }
 }

@@ -163,7 +163,10 @@ mod integration_tests {
         let web_map_response = add_web_map_item(&client, &uuid, &service_url).await;
         assert!(web_map_response.success);
 
-        let updated_title = format!("webmapIntegrationTestMap_{}_updated", uuid.replace("-", "_"));
+        let updated_title = format!(
+            "webmapIntegrationTestMap_{}_updated",
+            uuid.replace("-", "_")
+        );
         let updated_web_map = arcgis_sharing_rs::builders::webmap::WebMapBuilder::new()
             .set_extent(-109.5, 41.0, -109.0, 41.5, 4326)
             .add_feature_layer(&service_url, "updated_layer")

@@ -51,6 +51,9 @@ mod community_tests {
             .await
             .expect("Failed to fetch community self");
 
-        assert!(!response.username.is_empty(), "username should not be empty");
+        assert!(
+            !response.username.is_empty(),
+            "username should not be empty"
+        );
     }
 }
