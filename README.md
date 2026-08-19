@@ -57,6 +57,10 @@ APP_ARCGIS_USERNAME="your_username"
 APP_ARCGIS_PASSWORD="your_password"
 ```
 
+## Documentation
+
+- [Implemented Endpoints](docs/endpoints.md) — full list of currently supported REST API operations
+
 ## Status
 
 This library is in early development (v0.1.0). The API is subject to change.
