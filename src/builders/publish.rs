@@ -73,28 +73,18 @@ pub enum Coordinate {
     Longitude,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub enum CoordinateFieldType {
+    #[default]
     LatitudeAndLongitude,
     MGRS,
     USNG,
 }
 
-impl Default for CoordinateFieldType {
-    fn default() -> Self {
-        Self::LatitudeAndLongitude
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub enum Capabilities {
+    #[default]
     Query,
-}
-
-impl Default for Capabilities {
-    fn default() -> Self {
-        Self::Query
-    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
