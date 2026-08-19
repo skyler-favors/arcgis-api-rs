@@ -16,7 +16,7 @@ fn init() {
         .portal(portal)
         .legacy_auth(username, password, referer, expiration)
         .build();
-    arcgis_sharing_rs::initialise(client);
+    arcgis_sharing_rs::initialize(client);
 }
 
 #[allow(dead_code)]

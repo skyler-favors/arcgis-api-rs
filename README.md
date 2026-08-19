@@ -25,7 +25,7 @@ arcgis-sharing-rs = "0.1.0"
 
 Optional features:
 
-- `default-client` (enabled by default) - global `initialise()` / `instance()` helpers
+- `default-client` (enabled by default) - global `initialize()` / `instance()` helpers
 - `error-backtrace` - capture backtraces on errors (uses Snafu's backtrace support)
 
 ## Quick Start

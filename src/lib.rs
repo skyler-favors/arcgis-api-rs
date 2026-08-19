@@ -35,7 +35,7 @@ static STATIC_INSTANCE: LazyLock<arc_swap::ArcSwap<ArcGISSharingClient>> =
 
 #[cfg(feature = "default-client")]
 #[cfg_attr(docsrs, doc(cfg(feature = "default-client")))]
-pub fn initialise(client: ArcGISSharingClient) -> Arc<ArcGISSharingClient> {
+pub fn initialize(client: ArcGISSharingClient) -> Arc<ArcGISSharingClient> {
     STATIC_INSTANCE.swap(Arc::from(client))
 }
 
