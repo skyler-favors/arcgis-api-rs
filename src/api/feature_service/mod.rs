@@ -28,9 +28,7 @@ impl<'a> FeatureServiceHandler<'a> {
     }
 
     pub async fn info(&self) -> Result<FeatureServiceInfo> {
-        self.client
-            .get(self.url.as_str(), None::<&()>)
-            .await
+        self.client.get(self.url.as_str(), None::<&()>).await
     }
 
     pub fn query(&self) -> FeatureServiceQueryBuilder<'_, '_> {
