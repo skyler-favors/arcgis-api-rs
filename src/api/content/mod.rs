@@ -1,8 +1,11 @@
 mod add_item;
 mod analyze;
+mod create_service;
 
 use crate::{
-    api::content::{add_item::AddItemBuilder, analyze::AnalyzeBuilder},
+    api::content::{
+        add_item::AddItemBuilder, analyze::AnalyzeBuilder, create_service::CreateServiceBuilder,
+    },
     ArcGISSharingClient,
 };
 
@@ -22,5 +25,12 @@ impl<'a> ContentHandler<'a> {
 
     pub fn analyze(&self) -> AnalyzeBuilder<'_, '_> {
         AnalyzeBuilder::new(self)
+    }
+
+    pub fn create_service(
+        &self,
+        create_parameters: serde_json::Value,
+    ) -> CreateServiceBuilder<'_, '_> {
+        CreateServiceBuilder::new(self, create_parameters)
     }
 }

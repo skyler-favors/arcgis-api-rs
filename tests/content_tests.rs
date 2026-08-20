@@ -67,6 +67,41 @@ mod content_tests {
     }
 
     #[tokio::test]
+    async fn test_create_service() {
+        LazyLock::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+        let service_name = format!("test_create_service_{}", uuid::Uuid::new_v4().simple());
+
+        let response = client
+            .content(None::<String>)
+            .create_service(serde_json::json!({
+                "name": service_name,
+                "hasStaticData": false,
+                "maxRecordCount": 1000,
+                "capabilities": "Create,Delete,Query,Update,Editing"
+            }))
+            .set_description("Create service integration test")
+            .set_tags(vec!["test", "create-service"])
+            .set_snippet("Created by arcgis-sharing-rs tests")
+            .send()
+            .await
+            .unwrap();
+
+        assert!(response.success);
+        assert_eq!(response.name, service_name);
+        assert_eq!(response.service_type, "Feature Service");
+        assert_eq!(response.item_id, response.service_item_id);
+
+        let delete_response = client
+            .item(&response.item_id)
+            .delete()
+            .send()
+            .await
+            .unwrap();
+        assert!(delete_response.success);
+    }
+
+    #[tokio::test]
     async fn test_analyze_csv_item_id() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();

@@ -31,6 +31,7 @@ All paths are relative to the portal URL configured on the client (e.g. `https:/
 |---|---|---|---|
 | `client.content(username).add_item().send()` | `/sharing/rest/content/users/{username}/addItem` | POST | `AddItemResponse` |
 | `client.content(username).analyze().send()` | `/sharing/rest/content/features/analyze` | POST | `AnalyzeResponse` |
+| `client.content(username).create_service(parameters).send()` | `/sharing/rest/content/users/{username}/createService` | POST | `CreateServiceResponse` |
 
 ## Items
 

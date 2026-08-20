@@ -13,6 +13,24 @@ pub struct AddItemResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct CreateServiceResponse {
+    #[serde(rename = "encodedServiceURL")]
+    pub encoded_service_url: String,
+    pub item_id: String,
+    pub name: String,
+    pub service_item_id: String,
+    pub serviceurl: String,
+    pub size: i64,
+    pub success: bool,
+    #[serde(rename = "type")]
+    pub service_type: String,
+    pub description: String,
+    pub tags: String,
+    pub snippet: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct PublishItemResponse {
     pub services: Vec<PublishItemService>,
 }
