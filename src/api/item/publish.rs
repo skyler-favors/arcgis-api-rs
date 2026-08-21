@@ -21,6 +21,9 @@ pub struct PublishItemBuilder<'a, 'r> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     build_initial_cache: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    overwrite: Option<bool>,
 }
 
 impl<'a, 'r> PublishItemBuilder<'a, 'r> {
@@ -32,6 +35,7 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
             publish_parameters: String::new(),
             output_type: None,
             build_initial_cache: None,
+            overwrite: None,
         }
     }
 
@@ -65,6 +69,12 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
         self
     }
 
+    /// Overwrite the service previously published from this source item.
+    pub fn set_overwrite(mut self, overwrite: bool) -> Self {
+        self.overwrite = Some(overwrite);
+        self
+    }
+
     // TODO: I may be able to convert this to a re-usable trait
     fn to_multipart(&self) -> Result<Form> {
         let mut form = Form::new();
@@ -95,5 +105,23 @@ impl<'a, 'r> PublishItemBuilder<'a, 'r> {
 
         // POST with params as the body (not query parameters)
         self.handler.client.post_multipart(url, form).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ArcGISSharingClient;
+
+    #[test]
+    fn serializes_overwrite_flag() {
+        let client = ArcGISSharingClient::builder()
+            .portal("https://example.com".to_string())
+            .build();
+        let handler = ItemHandler::new(&client, "source-item-id".to_string());
+        let builder = PublishItemBuilder::new(&handler).set_overwrite(true);
+
+        let encoded = serde_urlencoded::to_string(builder).unwrap();
+        assert!(encoded.contains("overwrite=true"));
     }
 }

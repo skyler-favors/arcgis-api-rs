@@ -92,6 +92,7 @@ async fn map_arcgis_error(response: reqwest::Response) -> Result<Bytes> {
 pub struct ArcGISSharingClient {
     client: reqwest::Client,
     pub portal: Url,
+    admin_url: Option<Url>,
     auth_state: AuthState,
 }
 
@@ -111,6 +112,7 @@ impl Default for ArcGISSharingClient {
         ArcGISSharingClient {
             client: reqwest::Client::new(),
             portal: Url::parse("https://arcgis.com/").expect("Invalid portal URL"),
+            admin_url: None,
             auth_state: AuthState::None,
         }
     }
@@ -397,6 +399,7 @@ impl ArcGISSharingClient {
 #[derive(Default)]
 pub struct ArcGISSharingClientBuilder {
     portal: Option<String>,
+    admin_url: Option<String>,
     auth: Auth,
 }
 
@@ -407,6 +410,11 @@ impl ArcGISSharingClientBuilder {
 
     pub fn portal(mut self, portal: String) -> Self {
         self.portal = Some(portal);
+        self
+    }
+
+    pub fn admin_url(mut self, url: impl Into<String>) -> Self {
+        self.admin_url = Some(url.into());
         self
     }
 
@@ -451,10 +459,14 @@ impl ArcGISSharingClientBuilder {
             portal_str.push('/');
         }
         let portal = Url::parse(&portal_str).expect("Invalid portal URL");
+        let admin_url = self
+            .admin_url
+            .map(|url| Url::parse(url.trim_end_matches('/')).expect("Invalid admin URL"));
 
         ArcGISSharingClient {
             client: reqwest::Client::new(),
             portal,
+            admin_url,
             auth_state: auth,
         }
     }
@@ -476,6 +488,11 @@ impl ArcGISSharingClient {
 
     pub fn feature_service(&self, url: impl Into<String>) -> FeatureServiceHandler<'_> {
         FeatureServiceHandler::new(self, url.into())
+    }
+
+    pub fn admin(&self) -> AdminHandler<'_> {
+        let url = self.admin_url.clone().expect("No admin URL provided");
+        AdminHandler::new(self, url)
     }
 
     pub fn content(&self, username: Option<impl Into<String>>) -> ContentHandler<'_> {
@@ -560,6 +577,7 @@ impl ArcGISSharingClient {
         ArcGISSharingClient {
             client: self.client.clone(),
             portal: self.portal.clone(),
+            admin_url: self.admin_url.clone(),
             auth_state: AuthState::APIKey {
                 token: token.into(),
                 cached_username: Arc::new(RwLock::new(None)),

@@ -3,6 +3,14 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AddToDefinitionResponse {
+    pub success: bool,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FeatureServiceInfo {
     pub r#type: String, // should be Feature Layer
     pub name: String,   // name of the layer
