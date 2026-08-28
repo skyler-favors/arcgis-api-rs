@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
@@ -5,8 +7,7 @@ use serde_json::Value;
 use crate::models::webmap::*;
 
 /// Builder for creating web map JSON configurations
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct WebMapBuilder {
     operational_layers: Vec<OperationalLayer>,
     base_map: BaseMap,
@@ -16,6 +17,101 @@ pub struct WebMapBuilder {
     spatial_reference: SpatialReference,
     time_zone: String,
     version: String,
+    renderer_overrides: BTreeMap<usize, Value>,
+}
+
+impl<'de> Deserialize<'de> for WebMapBuilder {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct DeserializableWebMap {
+            operational_layers: Vec<Value>,
+            base_map: BaseMap,
+            authoring_app: String,
+            authoring_app_version: String,
+            initial_state: Option<InitialState>,
+            spatial_reference: SpatialReference,
+            time_zone: String,
+            version: String,
+        }
+
+        let raw = DeserializableWebMap::deserialize(deserializer)?;
+        let mut renderer_overrides = BTreeMap::new();
+        let operational_layers = raw
+            .operational_layers
+            .into_iter()
+            .enumerate()
+            .map(|(index, mut value)| {
+                if let Some(renderer) = value.pointer("/layerDefinition/drawingInfo/renderer") {
+                    renderer_overrides.insert(index, renderer.clone());
+                    value["layerDefinition"]["drawingInfo"] = Value::Null;
+                }
+                serde_json::from_value(value).map_err(serde::de::Error::custom)
+            })
+            .collect::<Result<Vec<_>, D::Error>>()?;
+
+        Ok(Self {
+            operational_layers,
+            base_map: raw.base_map,
+            authoring_app: raw.authoring_app,
+            authoring_app_version: raw.authoring_app_version,
+            initial_state: raw.initial_state,
+            spatial_reference: raw.spatial_reference,
+            time_zone: raw.time_zone,
+            version: raw.version,
+            renderer_overrides,
+        })
+    }
+}
+
+impl Serialize for WebMapBuilder {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct SerializableWebMap<'a> {
+            operational_layers: Vec<Value>,
+            base_map: &'a BaseMap,
+            authoring_app: &'a str,
+            authoring_app_version: &'a str,
+            initial_state: &'a Option<InitialState>,
+            spatial_reference: &'a SpatialReference,
+            time_zone: &'a str,
+            version: &'a str,
+        }
+
+        let operational_layers = self
+            .operational_layers
+            .iter()
+            .enumerate()
+            .map(|(index, layer)| {
+                let mut value = serde_json::to_value(layer).map_err(serde::ser::Error::custom)?;
+                if let Some(renderer) = self.renderer_overrides.get(&index) {
+                    value["layerDefinition"]["drawingInfo"] = serde_json::json!({
+                        "renderer": renderer
+                    });
+                }
+                Ok(value)
+            })
+            .collect::<Result<Vec<_>, S::Error>>()?;
+
+        SerializableWebMap {
+            operational_layers,
+            base_map: &self.base_map,
+            authoring_app: &self.authoring_app,
+            authoring_app_version: &self.authoring_app_version,
+            initial_state: &self.initial_state,
+            spatial_reference: &self.spatial_reference,
+            time_zone: &self.time_zone,
+            version: &self.version,
+        }
+        .serialize(serializer)
+    }
 }
 
 impl WebMapBuilder {
@@ -42,6 +138,7 @@ impl WebMapBuilder {
             },
             time_zone: "system".to_string(),
             version: "2.35".to_string(),
+            renderer_overrides: BTreeMap::new(),
         }
     }
 
@@ -184,10 +281,21 @@ impl WebMapBuilder {
 
     /// Override symbology for the last added layer with a simple renderer.
     pub fn with_layer_symbology(mut self, color: [u8; 4], geometry_type: &str) -> Self {
+        if let Some(index) = self.operational_layers.len().checked_sub(1) {
+            self.renderer_overrides.remove(&index);
+        }
         if let Some(layer) = self.operational_layers.last_mut() {
             if let Some(ref mut layer_def) = layer.layer_definition {
                 layer_def.drawing_info = Some(simple_drawing_info(color, geometry_type));
             }
+        }
+        self
+    }
+
+    /// Override symbology for the last added layer with a native ArcGIS renderer.
+    pub fn with_layer_renderer(mut self, renderer: Value) -> Self {
+        if let Some(index) = self.operational_layers.len().checked_sub(1) {
+            self.renderer_overrides.insert(index, renderer);
         }
         self
     }
@@ -666,6 +774,27 @@ mod tests {
         let json = serde_json::to_string(&web_map).unwrap();
         assert!(json.contains("drawingInfo"));
         assert!(json.contains("[31,119,180,255]"));
+    }
+
+    #[test]
+    fn test_web_map_builder_generated_renderer() {
+        let renderer = serde_json::json!({
+            "type": "uniqueValue",
+            "field1": "status",
+            "uniqueValueInfos": []
+        });
+        let web_map = WebMapBuilder::new()
+            .add_feature_layer(
+                "https://services.arcgis.com/test/FeatureServer/0",
+                "Test Layer",
+            )
+            .with_layer_renderer(renderer.clone());
+
+        let json = serde_json::to_value(web_map).unwrap();
+        assert_eq!(
+            json["operationalLayers"][0]["layerDefinition"]["drawingInfo"]["renderer"],
+            renderer
+        );
     }
 
     #[test]

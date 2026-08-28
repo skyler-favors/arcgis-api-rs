@@ -50,6 +50,8 @@ pub enum EsriType {
     EsriFieldTypeGeometry,
     EsriFieldTypeBigInteger,
     EsriFieldTypeSingle,
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

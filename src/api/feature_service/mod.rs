@@ -1,5 +1,6 @@
 mod add_to_definition;
 mod apply_edits;
+mod generate_renderer;
 mod query;
 
 use snafu::ResultExt;
@@ -8,7 +9,7 @@ use url::Url;
 use crate::{
     api::feature_service::{
         add_to_definition::AddToDefinitionBuilder, apply_edits::FeatureServiceApplyEditsBuilder,
-        query::FeatureServiceQueryBuilder,
+        generate_renderer::GenerateRendererBuilder, query::FeatureServiceQueryBuilder,
     },
     error::{Result, UrlParseSnafu},
     models::FeatureServiceInfo,
@@ -82,6 +83,13 @@ impl<'a> FeatureServiceHandler<'a> {
 
     pub fn query(&self) -> FeatureServiceQueryBuilder<'_, '_> {
         FeatureServiceQueryBuilder::new(self)
+    }
+
+    pub fn generate_renderer(
+        &self,
+        classification_def: serde_json::Value,
+    ) -> GenerateRendererBuilder<'_, '_> {
+        GenerateRendererBuilder::new(self, classification_def)
     }
 
     pub fn apply_edits(&self) -> FeatureServiceApplyEditsBuilder<'_, '_> {
