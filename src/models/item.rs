@@ -14,19 +14,27 @@ pub struct AddItemResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateServiceResponse {
-    #[serde(rename = "encodedServiceURL")]
-    pub encoded_service_url: String,
-    pub item_id: String,
-    pub name: String,
-    pub service_item_id: String,
-    pub serviceurl: String,
-    pub size: i64,
+    #[serde(rename = "encodedServiceURL", skip_serializing_if = "Option::is_none")]
+    pub encoded_service_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub service_item_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub serviceurl: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<i64>,
     pub success: bool,
-    #[serde(rename = "type")]
-    pub service_type: String,
-    pub description: String,
-    pub tags: String,
-    pub snippet: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub service_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub snippet: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

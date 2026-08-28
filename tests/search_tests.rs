@@ -123,7 +123,7 @@ mod search_tests {
             .await;
 
         println!("Collected {} results", results.len());
-        assert!(results.len() > 0, "Should have collected some results");
+        assert!(!results.is_empty(), "Should have collected some results");
         assert!(
             results.len() <= 6,
             "Should respect max_pages when collecting"
@@ -226,7 +226,7 @@ mod search_tests {
 
         // With no delay and 3 pages, should complete faster than 1 second
         // (assuming each API call takes < 333ms on average)
-        assert!(results.len() > 0, "Should have fetched some results");
+        assert!(!results.is_empty(), "Should have fetched some results");
         println!("Test completed in {:?}", duration);
     }
 
@@ -259,7 +259,7 @@ mod search_tests {
 
         // With 2 pages, we should have at least 1 delay (between page 1 and 2)
         // So total time should be at least 100ms
-        assert!(results.len() > 0, "Should have fetched some results");
+        assert!(!results.is_empty(), "Should have fetched some results");
         assert!(
             duration >= Duration::from_millis(100),
             "Should have taken at least 100ms with delay"
@@ -286,6 +286,6 @@ mod search_tests {
         //     println!("{} {} {}", result.title, result.type_field, result.owner);
         // }
 
-        assert!(results.len() > 0, "Should have found some results");
+        assert!(!results.is_empty(), "Should have found some results");
     }
 }

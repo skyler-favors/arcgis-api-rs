@@ -88,16 +88,12 @@ mod content_tests {
             .unwrap();
 
         assert!(response.success);
-        assert_eq!(response.name, service_name);
-        assert_eq!(response.service_type, "Feature Service");
+        assert_eq!(response.name.as_deref(), Some(service_name.as_str()));
+        assert_eq!(response.service_type.as_deref(), Some("Feature Service"));
         assert_eq!(response.item_id, response.service_item_id);
 
-        let delete_response = client
-            .item(&response.item_id)
-            .delete()
-            .send()
-            .await
-            .unwrap();
+        let item_id = response.item_id.expect("createService response item ID");
+        let delete_response = client.item(item_id).delete().send().await.unwrap();
         assert!(delete_response.success);
     }
 

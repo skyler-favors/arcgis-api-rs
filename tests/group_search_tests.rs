@@ -26,6 +26,9 @@ mod search_tests {
         //     println!("{}: {}", result.title, result.owner);
         // }
 
-        assert!(results.len() > 0, "Should have fetched at least one result");
+        assert!(
+            !results.is_empty(),
+            "Should have fetched at least one result"
+        );
     }
 }

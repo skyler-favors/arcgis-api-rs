@@ -22,8 +22,8 @@ mod community_tests {
             .expect("Failed to send create group query");
 
         let group = create_result.group;
-        assert!(&group.title == &title);
-        return group.id;
+        assert!(group.title == title);
+        group.id
     }
 
     async fn delete_group(client: &ArcGISSharingClient, group_id: &str) {
