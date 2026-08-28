@@ -1,7 +1,12 @@
 use crate::{
-    error::{ReqwestSnafu, Result},
-    models::{OAuthTokenResponse, TokenResponse},
+    error::{OAuthError, ReqwestSnafu, Result},
+    models::{
+        OAuthAccessTokenResponse, OAuthAuthorizationCodeResponse,
+        OAuthRefreshTokenExchangeResponse, TokenResponse,
+    },
 };
+use serde::de::DeserializeOwned;
+use serde_json::Value;
 use std::{
     collections::HashMap,
     fmt,
@@ -218,7 +223,7 @@ pub async fn exchange_oauth_authorization_code(
     code: &str,
     redirect_uri: &str,
     code_verifier: &str,
-) -> Result<OAuthTokenResponse> {
+) -> Result<OAuthAuthorizationCodeResponse> {
     exchange_oauth_authorization_code_with_client(
         &reqwest::Client::new(),
         token_url,
@@ -238,7 +243,7 @@ pub async fn exchange_oauth_authorization_code_with_client(
     code: &str,
     redirect_uri: &str,
     code_verifier: &str,
-) -> Result<OAuthTokenResponse> {
+) -> Result<OAuthAuthorizationCodeResponse> {
     let response = client
         .post(token_url)
         .form(&[
@@ -250,23 +255,9 @@ pub async fn exchange_oauth_authorization_code_with_client(
         ])
         .send()
         .await
-        .context(ReqwestSnafu)?;
+        .map_err(|source| crate::error::Error::oauth(OAuthError::Transport { source }))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        return Err(crate::error::Error::arcgis(crate::error::ArcgisError {
-            code: status.as_u16() as i32,
-            message_code: None,
-            message: body,
-            details: None,
-        }));
-    }
-
-    response
-        .json::<OAuthTokenResponse>()
-        .await
-        .context(ReqwestSnafu)
+    parse_oauth_response(response, false).await
 }
 
 /// Exchange an OAuth 2.0 refresh token for a new portal access token.
@@ -274,7 +265,7 @@ pub async fn exchange_oauth_refresh_token(
     token_url: &str,
     client_id: &str,
     refresh_token: &str,
-) -> Result<OAuthTokenResponse> {
+) -> Result<OAuthAccessTokenResponse> {
     exchange_oauth_refresh_token_with_client(
         &reqwest::Client::new(),
         token_url,
@@ -290,7 +281,7 @@ pub async fn exchange_oauth_refresh_token_with_client(
     token_url: &str,
     client_id: &str,
     refresh_token: &str,
-) -> Result<OAuthTokenResponse> {
+) -> Result<OAuthAccessTokenResponse> {
     let response = client
         .post(token_url)
         .form(&[
@@ -300,23 +291,106 @@ pub async fn exchange_oauth_refresh_token_with_client(
         ])
         .send()
         .await
-        .context(ReqwestSnafu)?;
+        .map_err(|source| crate::error::Error::oauth(OAuthError::Transport { source }))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        return Err(crate::error::Error::arcgis(crate::error::ArcgisError {
-            code: status.as_u16() as i32,
-            message_code: None,
-            message: body,
-            details: None,
-        }));
+    parse_oauth_response(response, true).await
+}
+
+/// Exchange an ArcGIS refresh token for a replacement refresh token.
+pub async fn exchange_oauth_refresh_token_credential(
+    token_url: &str,
+    client_id: &str,
+    redirect_uri: &str,
+    refresh_token: &str,
+) -> Result<OAuthRefreshTokenExchangeResponse> {
+    exchange_oauth_refresh_token_credential_with_client(
+        &reqwest::Client::new(),
+        token_url,
+        client_id,
+        redirect_uri,
+        refresh_token,
+    )
+    .await
+}
+
+/// Same as [`exchange_oauth_refresh_token_credential`] but uses an existing HTTP client.
+pub async fn exchange_oauth_refresh_token_credential_with_client(
+    client: &reqwest::Client,
+    token_url: &str,
+    client_id: &str,
+    redirect_uri: &str,
+    refresh_token: &str,
+) -> Result<OAuthRefreshTokenExchangeResponse> {
+    let response = client
+        .post(token_url)
+        .form(&[
+            ("client_id", client_id),
+            ("grant_type", "exchange_refresh_token"),
+            ("redirect_uri", redirect_uri),
+            ("refresh_token", refresh_token),
+        ])
+        .send()
+        .await
+        .map_err(|source| crate::error::Error::oauth(OAuthError::Transport { source }))?;
+
+    parse_oauth_response(response, true).await
+}
+
+async fn parse_oauth_response<T: DeserializeOwned>(
+    response: reqwest::Response,
+    uses_refresh_credential: bool,
+) -> Result<T> {
+    let status = response.status();
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|source| crate::error::Error::oauth(OAuthError::Transport { source }))?;
+    let body = String::from_utf8_lossy(&bytes).into_owned();
+
+    if !status.is_success() {
+        let (code, description) = oauth_error_fields(&bytes);
+        let error = if uses_refresh_credential
+            && matches!(
+                code.as_deref(),
+                Some("invalid_grant" | "invalid_refresh_token")
+            ) {
+            OAuthError::InvalidRefreshCredential {
+                status,
+                code: code.unwrap_or_else(|| "invalid_grant".into()),
+                description,
+            }
+        } else if status == reqwest::StatusCode::TOO_MANY_REQUESTS {
+            OAuthError::RateLimited { body }
+        } else if status.is_server_error() {
+            OAuthError::Server { status, body }
+        } else {
+            OAuthError::Client { status, body }
+        };
+        return Err(crate::error::Error::oauth(error));
     }
 
-    response
-        .json::<OAuthTokenResponse>()
-        .await
-        .context(ReqwestSnafu)
+    serde_json::from_slice(&bytes)
+        .map_err(|source| crate::error::Error::oauth(OAuthError::MalformedResponse { source }))
+}
+
+fn oauth_error_fields(bytes: &[u8]) -> (Option<String>, Option<String>) {
+    let Ok(value) = serde_json::from_slice::<Value>(bytes) else {
+        return (None, None);
+    };
+    let error = &value["error"];
+    if let Some(code) = error.as_str() {
+        return (
+            Some(code.to_owned()),
+            value["error_description"].as_str().map(str::to_owned),
+        );
+    }
+    (
+        error["error"].as_str().map(str::to_owned),
+        error["error_description"]
+            .as_str()
+            .or_else(|| error["message"].as_str())
+            .map(str::to_owned),
+    )
 }
 
 fn duration_until(unix_ts: i64) -> Option<Duration> {

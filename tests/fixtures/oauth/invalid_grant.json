@@ -1,0 +1,9 @@
+{
+  "error": {
+    "code": 400,
+    "error": "invalid_grant",
+    "error_description": "Refresh token expired",
+    "message": "Refresh token expired",
+    "details": []
+  }
+}

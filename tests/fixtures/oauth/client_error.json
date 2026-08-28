@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": 403,
+    "message": "Application is not permitted to use this grant",
+    "details": []
+  }
+}

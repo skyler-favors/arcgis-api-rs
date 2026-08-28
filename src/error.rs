@@ -28,6 +28,17 @@ pub enum Error {
     #[cfg(not(feature = "error-backtrace"))]
     Arcgis { source: Box<ArcgisError> },
 
+    #[snafu(display("OAuth error: {}", source))]
+    #[cfg(not(feature = "error-backtrace"))]
+    OAuth { source: Box<OAuthError> },
+
+    #[snafu(display("OAuth error: {}\nFound at {}", source, backtrace))]
+    #[cfg(feature = "error-backtrace")]
+    OAuth {
+        source: Box<OAuthError>,
+        backtrace: Backtrace,
+    },
+
     #[snafu(display("ArcGIS Error: {}\nFound at {}", source, backtrace))]
     #[cfg(feature = "error-backtrace")]
     Arcgis {
@@ -198,6 +209,14 @@ impl Error {
         }
     }
 
+    pub(crate) fn oauth(source: OAuthError) -> Self {
+        Error::OAuth {
+            source: Box::new(source),
+            #[cfg(feature = "error-backtrace")]
+            backtrace: Backtrace::capture(),
+        }
+    }
+
     pub(crate) fn legacy_auth() -> Self {
         #[cfg(feature = "error-backtrace")]
         {
@@ -216,6 +235,61 @@ impl Error {
             source,
             #[cfg(feature = "error-backtrace")]
             backtrace: Backtrace::capture(),
+        }
+    }
+}
+
+/// A failure returned while exchanging ArcGIS OAuth credentials.
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum OAuthError {
+    InvalidRefreshCredential {
+        status: http::StatusCode,
+        code: String,
+        description: Option<String>,
+    },
+    RateLimited {
+        body: String,
+    },
+    Server {
+        status: http::StatusCode,
+        body: String,
+    },
+    Client {
+        status: http::StatusCode,
+        body: String,
+    },
+    MalformedResponse {
+        source: serde_json::Error,
+    },
+    Transport {
+        source: reqwest::Error,
+    },
+}
+
+impl fmt::Display for OAuthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidRefreshCredential { code, .. } => {
+                write!(f, "ArcGIS rejected the refresh credential ({code})")
+            }
+            Self::RateLimited { .. } => write!(f, "ArcGIS OAuth request was rate limited"),
+            Self::Server { status, .. } => write!(f, "ArcGIS OAuth server returned {status}"),
+            Self::Client { status, .. } => write!(f, "ArcGIS OAuth request returned {status}"),
+            Self::MalformedResponse { source } => {
+                write!(f, "ArcGIS OAuth response was malformed: {source}")
+            }
+            Self::Transport { source } => write!(f, "ArcGIS OAuth transport failed: {source}"),
+        }
+    }
+}
+
+impl std::error::Error for OAuthError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::MalformedResponse { source } => Some(source),
+            Self::Transport { source } => Some(source),
+            _ => None,
         }
     }
 }
