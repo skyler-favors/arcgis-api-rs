@@ -224,6 +224,10 @@ pub struct BaseMapLayer {
     pub id: String,
     pub opacity: Option<f64>,
     pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub item_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_reference: Option<bool>,
     pub url: Option<String>,
     pub visibility: bool,
     pub layer_type: String,

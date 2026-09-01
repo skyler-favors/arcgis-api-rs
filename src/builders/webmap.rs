@@ -504,6 +504,8 @@ impl WebMapBuilder {
                         id: "World_Hillshade_3689".to_string(),
                         opacity: Some(1.0),
                         title: "World Hillshade".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: Some("https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer".to_string()),
                         visibility: true,
                         layer_type: "ArcGISTiledMapServiceLayer".to_string(),
@@ -515,6 +517,8 @@ impl WebMapBuilder {
                         id: "VectorTile_6451".to_string(),
                         opacity: Some(1.0),
                         title: "World Topographic Map".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: None,
                         visibility: true,
                         layer_type: "VectorTileLayer".to_string(),
@@ -531,6 +535,8 @@ impl WebMapBuilder {
                         id: "World_Street_Map_8722".to_string(),
                         opacity: Some(1.0),
                         title: "World Street Map".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: Some("https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer".to_string()),
                         visibility: true,
                         layer_type: "ArcGISTiledMapServiceLayer".to_string(),
@@ -547,6 +553,8 @@ impl WebMapBuilder {
                         id: "World_Imagery_2233".to_string(),
                         opacity: Some(1.0),
                         title: "World Imagery".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: Some("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer".to_string()),
                         visibility: true,
                         layer_type: "ArcGISTiledMapServiceLayer".to_string(),
@@ -558,6 +566,8 @@ impl WebMapBuilder {
                         id: "World_Boundaries_and_Places_5488".to_string(),
                         opacity: Some(1.0),
                         title: "World Boundaries and Places".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: None,
                         visibility: true,
                         layer_type: "VectorTileLayer".to_string(),
@@ -573,12 +583,27 @@ impl WebMapBuilder {
                     BaseMapLayer {
                         id: "VectorTile_Dark_Gray_8199".to_string(),
                         opacity: Some(1.0),
-                        title: "Dark Gray Canvas".to_string(),
+                        title: "Dark Gray Canvas Base".to_string(),
+                        item_id: Some("5e9b3685f4c24d8781073dd928ebda50".to_string()),
+                        is_reference: None,
                         url: None,
                         visibility: true,
                         layer_type: "VectorTileLayer".to_string(),
                         effect: Some(Vec::new()),
                         style_url: Some("https://cdn.arcgis.com/sharing/rest/content/items/5e9b3685f4c24d8781073dd928ebda50/resources/styles/root.json".to_string()),
+                        blend_mode: None,
+                    },
+                    BaseMapLayer {
+                        id: "VectorTile_Dark_Gray_Reference_747c".to_string(),
+                        opacity: Some(1.0),
+                        title: "Dark Gray Canvas Reference".to_string(),
+                        item_id: Some("747cb7a5329c478cbe6981076cc879c5".to_string()),
+                        is_reference: Some(true),
+                        url: None,
+                        visibility: true,
+                        layer_type: "VectorTileLayer".to_string(),
+                        effect: Some(Vec::new()),
+                        style_url: Some("https://cdn.arcgis.com/sharing/rest/content/items/747cb7a5329c478cbe6981076cc879c5/resources/styles/root.json".to_string()),
                         blend_mode: None,
                     },
                 ],
@@ -590,6 +615,8 @@ impl WebMapBuilder {
                         id: "VectorTile_Light_Gray_2827".to_string(),
                         opacity: Some(1.0),
                         title: "Light Gray Canvas".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: None,
                         visibility: true,
                         layer_type: "VectorTileLayer".to_string(),
@@ -606,6 +633,8 @@ impl WebMapBuilder {
                         id: "VectorTile_Navigation_8145".to_string(),
                         opacity: Some(1.0),
                         title: "World Navigation Map".to_string(),
+                        item_id: None,
+                        is_reference: None,
                         url: None,
                         visibility: true,
                         layer_type: "VectorTileLayer".to_string(),
@@ -737,6 +766,25 @@ mod tests {
             let web_map = WebMapBuilder::new().set_basemap(preset);
             assert_eq!(web_map.base_map.title, expected_title);
         }
+    }
+
+    #[test]
+    fn dark_gray_basemap_includes_reference_layer() {
+        let web_map = WebMapBuilder::new().set_basemap(BasemapPreset::DarkGray);
+
+        assert_eq!(web_map.base_map.base_map_layers.len(), 2);
+        assert_eq!(
+            web_map.base_map.base_map_layers[1].title,
+            "Dark Gray Canvas Reference"
+        );
+        assert_eq!(web_map.base_map.base_map_layers[1].is_reference, Some(true));
+
+        let json = serde_json::to_value(web_map).unwrap();
+        assert_eq!(json["baseMap"]["baseMapLayers"][1]["isReference"], true);
+        assert_eq!(
+            json["baseMap"]["baseMapLayers"][1]["itemId"],
+            "747cb7a5329c478cbe6981076cc879c5"
+        );
     }
 
     #[test]
