@@ -315,12 +315,13 @@ impl<'a> SearchStream<'a> {
         max_pages: usize,
         page_fetch_delay: Duration,
     ) -> Self {
+        let current_start = params.start.unwrap_or(1);
         Self {
             client,
             params,
             buffer: VecDeque::new(),
-            current_start: 1,
-            next_start: 1,
+            current_start,
+            next_start: current_start,
             pages_fetched: 0,
             max_pages,
             finished: false,
@@ -979,5 +980,53 @@ impl<'a> SearchBuilder<'a> {
             self.max_pages,
             self.page_fetch_delay,
         )
+    }
+
+    /// Executes one search request and returns its complete page, including
+    /// `total`, `start`, `num`, and `next_start` pagination metadata.
+    ///
+    /// Unlike [`send()`](Self::send), this method does not fetch subsequent
+    /// pages. Use [`set_start()`](Self::set_start) with the prior response's
+    /// `next_start` value to request the next page.
+    ///
+    /// # Example
+    /// ```no_run
+    /// # use arcgis_sharing_rs::ArcGISSharingClient;
+    /// # async fn example(client: &ArcGISSharingClient) -> arcgis_sharing_rs::error::Result<()> {
+    /// let page = client
+    ///     .search()
+    ///     .query("water")
+    ///     .set_start(1)
+    ///     .set_num(20)
+    ///     .send_page()
+    ///     .await?;
+    ///
+    /// println!("{} total results; next page starts at {}", page.total, page.next_start);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn send_page(self) -> Result<SearchResponse> {
+        let url = self
+            .client
+            .portal
+            .join("sharing/rest/search")
+            .context(UrlParseSnafu)?;
+        let params = self.to_params();
+        self.client.get(url, Some(&params)).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn search_stream_honors_configured_start() {
+        let client = ArcGISSharingClient::default();
+        let builder = SearchBuilder::new(&client).set_start(11);
+        let stream = builder.send();
+
+        assert_eq!(stream.current_start, 11);
+        assert_eq!(stream.next_start, 11);
     }
 }

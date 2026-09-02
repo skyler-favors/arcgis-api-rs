@@ -38,6 +38,28 @@ mod search_tests {
     }
 
     #[tokio::test]
+    async fn test_search_page_returns_pagination_metadata() {
+        LazyLock::force(&SETUP);
+        let client = arcgis_sharing_rs::instance();
+
+        let page = client
+            .search()
+            .query("water")
+            .set_start(1)
+            .set_num(5)
+            .send_page()
+            .await
+            .unwrap();
+
+        assert_eq!(page.start, 1);
+        assert!(page.results.len() <= 5);
+        assert!(page.total >= page.results.len() as i64);
+        if page.total > page.results.len() as i64 {
+            assert!(page.next_start > page.start);
+        }
+    }
+
+    #[tokio::test]
     async fn test_search_stream_pagination() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
