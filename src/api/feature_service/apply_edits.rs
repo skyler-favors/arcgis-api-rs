@@ -1,14 +1,14 @@
 use serde::Serialize;
 
 use crate::api::serialize_json_string;
-use crate::api::FeatureServiceHandler;
+use crate::api::FeatureLayerHandler;
 use crate::{error::Result, models::*};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FeatureServiceApplyEditsBuilder<'a, 'r> {
+pub struct FeatureLayerApplyEditsBuilder<'a, 'r> {
     #[serde(skip)]
-    handler: &'r FeatureServiceHandler<'a>,
+    handler: &'r FeatureLayerHandler<'a>,
 
     // Core edit arrays - serialize as JSON strings
     #[serde(
@@ -67,8 +67,8 @@ pub struct FeatureServiceApplyEditsBuilder<'a, 'r> {
     r#async: Option<bool>,
 }
 
-impl<'a, 'r> FeatureServiceApplyEditsBuilder<'a, 'r> {
-    pub fn new(handler: &'r FeatureServiceHandler<'a>) -> Self {
+impl<'a, 'r> FeatureLayerApplyEditsBuilder<'a, 'r> {
+    pub fn new(handler: &'r FeatureLayerHandler<'a>) -> Self {
         Self {
             handler,
             adds: Vec::new(),

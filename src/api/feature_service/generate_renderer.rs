@@ -1,7 +1,7 @@
 use serde::{Serialize, Serializer};
 use snafu::ResultExt;
 
-use crate::api::FeatureServiceHandler;
+use crate::api::FeatureLayerHandler;
 use crate::error::{Result, UrlParseSnafu};
 
 fn serialize_json_value<S>(value: &serde_json::Value, serializer: S) -> Result<S::Ok, S::Error>
@@ -15,7 +15,7 @@ where
 #[serde(rename_all = "camelCase")]
 pub struct GenerateRendererBuilder<'a, 'r> {
     #[serde(skip)]
-    handler: &'r FeatureServiceHandler<'a>,
+    handler: &'r FeatureLayerHandler<'a>,
 
     #[serde(serialize_with = "serialize_json_value")]
     classification_def: serde_json::Value,
@@ -26,7 +26,7 @@ pub struct GenerateRendererBuilder<'a, 'r> {
 
 impl<'a, 'r> GenerateRendererBuilder<'a, 'r> {
     pub fn new(
-        handler: &'r FeatureServiceHandler<'a>,
+        handler: &'r FeatureLayerHandler<'a>,
         classification_def: serde_json::Value,
     ) -> Self {
         Self {
@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn serializes_classification_definition_as_json() {
         let client = ArcGISSharingClient::default();
-        let handler = client.feature_service("https://example.com/FeatureServer/0");
+        let handler = client.feature_layer("https://example.com/FeatureServer/0");
         let builder = GenerateRendererBuilder::new(
             &handler,
             json!({
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn renderer_url_appends_to_path_before_query() {
         let client = ArcGISSharingClient::default();
-        let handler = client.feature_service("https://example.com/FeatureServer/0?custom=value");
+        let handler = client.feature_layer("https://example.com/FeatureServer/0?custom=value");
         let mut url = handler.url.clone();
         url.path_segments_mut()
             .unwrap()
@@ -105,7 +105,7 @@ mod tests {
     #[tokio::test]
     async fn non_base_url_returns_error() {
         let client = ArcGISSharingClient::default();
-        let handler = client.feature_service("mailto:layer@example.com");
+        let handler = client.feature_layer("mailto:layer@example.com");
         let error = handler
             .generate_renderer(json!({ "type": "uniqueValueDef" }))
             .send()

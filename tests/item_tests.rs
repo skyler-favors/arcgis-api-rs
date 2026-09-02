@@ -38,7 +38,7 @@ mod item_tests {
         //for layer in data.operational_layers.clone() {
         let layer = data.operational_layers[0].clone();
         if let Some(url) = layer.url {
-            let fs_data = client.feature_service(url).info().await.unwrap();
+            let fs_data = client.feature_layer(url).info().await.unwrap();
 
             println!("{}", serde_json::to_string(&fs_data).unwrap());
             //out.push(fs_data);

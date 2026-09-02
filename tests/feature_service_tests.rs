@@ -9,17 +9,17 @@ mod feature_service_tests {
     use super::*;
 
     #[tokio::test]
-    async fn test_private_feature_service() {
+    async fn test_private_feature_layer() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
-        let response = client.feature_service(fs_url).info().await.unwrap();
+        let response = client.feature_layer(fs_url).info().await.unwrap();
         assert!(response.r#type == "Feature Layer")
     }
 
     #[tokio::test]
-    async fn test_public_feature_service() {
+    async fn test_public_feature_layer() {
         LazyLock::force(&SETUP);
         let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
         let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
@@ -27,18 +27,18 @@ mod feature_service_tests {
             .build();
         let fs_url = std::env::var("TEST_PUBLIC_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PUBLIC_FEATURE_SERVICE'");
-        let response = client.feature_service(fs_url).info().await.unwrap();
+        let response = client.feature_layer(fs_url).info().await.unwrap();
         assert!(response.r#type == "Feature Layer")
     }
 
     #[tokio::test]
-    async fn test_feature_service_query_count_only() {
+    async fn test_feature_layer_query_count_only() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
         let response = client
-            .feature_service(fs_url)
+            .feature_layer(fs_url)
             .query()
             .set_count_only(true)
             .send()
@@ -48,7 +48,7 @@ mod feature_service_tests {
     }
 
     #[tokio::test]
-    async fn test_feature_service_query_point_geometry() {
+    async fn test_feature_layer_query_point_geometry() {
         LazyLock::force(&SETUP);
         let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
         let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
@@ -61,7 +61,7 @@ mod feature_service_tests {
         let geometry = r#"{"x":-119.71530713468918,"y":37.781061871461439}"#.to_string();
 
         let response = client
-            .feature_service(fs_url)
+            .feature_layer(fs_url)
             .query()
             .set_geometry(geometry)
             .set_spatial_reference(4326)
@@ -77,7 +77,7 @@ mod feature_service_tests {
     }
 
     #[tokio::test]
-    async fn test_feature_service_query_polygon_geometry() {
+    async fn test_feature_layer_query_polygon_geometry() {
         LazyLock::force(&SETUP);
         let portal = std::env::var("APP_ARCGIS_PORTAL").unwrap();
         let client = arcgis_sharing_rs::ArcGISSharingClient::builder()
@@ -98,7 +98,7 @@ mod feature_service_tests {
         // ]];
 
         let response = client
-            .feature_service(fs_url)
+            .feature_layer(fs_url)
             .query()
             .set_geometry(geometry)
             .set_spatial_reference(4326)
@@ -114,7 +114,7 @@ mod feature_service_tests {
     }
 
     #[tokio::test]
-    async fn test_feature_service_apply_edits_update() {
+    async fn test_feature_layer_apply_edits_update() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE")
@@ -126,7 +126,7 @@ mod feature_service_tests {
         ];
 
         let response = client
-            .feature_service(fs_url)
+            .feature_layer(fs_url)
             .apply_edits()
             .set_updates(updates)
             .send()
@@ -140,14 +140,14 @@ mod feature_service_tests {
     }
 
     #[tokio::test]
-    async fn test_feature_service_unique_values() {
+    async fn test_feature_layer_unique_values() {
         LazyLock::force(&SETUP);
         let client = arcgis_sharing_rs::instance();
         let fs_url = std::env::var("TEST_PRIVATE_FEATURE_SERVICE2")
             .expect("Failed to find env variable 'TEST_PRIVATE_FEATURE_SERVICE'");
 
         let response = client
-            .feature_service(fs_url)
+            .feature_layer(fs_url)
             .query()
             .set_where("1=1")
             .set_out_fields("industry")

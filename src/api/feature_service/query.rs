@@ -1,13 +1,13 @@
 use serde::Serialize;
 
-use crate::api::FeatureServiceHandler;
+use crate::api::FeatureLayerHandler;
 use crate::{error::Result, models::*};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FeatureServiceQueryBuilder<'a, 'r> {
+pub struct FeatureLayerQueryBuilder<'a, 'r> {
     #[serde(skip)]
-    handler: &'r FeatureServiceHandler<'a>,
+    handler: &'r FeatureLayerHandler<'a>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     return_count_only: Option<bool>,
@@ -61,8 +61,8 @@ pub struct FeatureServiceQueryBuilder<'a, 'r> {
     in_sr: Option<String>,
 }
 
-impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
-    pub fn new(handler: &'r FeatureServiceHandler<'a>) -> Self {
+impl<'a, 'r> FeatureLayerQueryBuilder<'a, 'r> {
+    pub fn new(handler: &'r FeatureLayerHandler<'a>) -> Self {
         Self {
             handler,
             return_count_only: Some(false),
@@ -170,7 +170,7 @@ impl<'a, 'r> FeatureServiceQueryBuilder<'a, 'r> {
         self
     }
 
-    pub async fn send(&self) -> Result<FeatureServiceQueryResponse> {
+    pub async fn send(&self) -> Result<FeatureLayerQueryResponse> {
         let url = format!("{}/query", self.handler.url);
         self.handler.client.get(url, Some(self)).await
     }

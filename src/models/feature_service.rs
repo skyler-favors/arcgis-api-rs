@@ -11,9 +11,36 @@ pub struct AddToDefinitionResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct FeatureServiceInfo {
-    pub r#type: String, // should be Feature Layer
-    pub name: String,   // name of the layer
+    #[serde(default)]
+    pub layers: Vec<FeatureLayer>,
+    #[serde(default)]
+    pub tables: Vec<FeatureLayer>,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureLayer {
+    pub id: u32,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_layer_id: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub geometry_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub r#type: Option<String>,
+    #[serde(flatten)]
+    pub extra_fields: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FeatureLayerInfo {
+    pub r#type: String,
+    pub name: String,
     pub fields: Vec<EsriField>,
     pub description: Option<String>,
     //max_record_count: i32, // TODO: use this to dynamically handle page size
@@ -55,7 +82,7 @@ pub enum EsriType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FeatureServiceQueryResponse {
+pub struct FeatureLayerQueryResponse {
     #[serde(default)]
     pub count: i32,
     #[serde(skip_serializing_if = "Option::is_none")]

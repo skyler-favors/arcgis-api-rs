@@ -490,6 +490,10 @@ impl ArcGISSharingClient {
         FeatureServiceHandler::new(self, url.into())
     }
 
+    pub fn feature_layer(&self, url: impl Into<String>) -> FeatureLayerHandler<'_> {
+        FeatureLayerHandler::new(self, url.into())
+    }
+
     pub fn admin(&self) -> AdminHandler<'_> {
         let url = self.admin_url.clone().expect("No admin URL provided");
         AdminHandler::new(self, url)
